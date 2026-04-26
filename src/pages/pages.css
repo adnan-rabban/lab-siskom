@@ -1,0 +1,380 @@
+/* ============================================================
+   Page Styles
+   ============================================================ */
+
+/* --- Landing Page --- */
+.landing-page {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-content {
+  position: relative;
+  z-index: var(--z-base);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6);
+}
+
+.landing-header {
+  text-align: center;
+  margin-bottom: var(--sp-16);
+  animation: fade-in 0.8s var(--ease-out) forwards;
+}
+
+.landing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-4);
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--accent-cyan);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: var(--sp-6);
+}
+
+.landing-title {
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-black);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--sp-4);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 50%, var(--accent-amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.landing-subtitle {
+  font-size: var(--fs-lg);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: var(--lh-relaxed);
+}
+
+.landing-pudak-credit {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.landing-pudak-credit strong {
+  color: var(--text-secondary);
+}
+
+/* --- Practicum Cards Grid --- */
+.practicum-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-16);
+}
+
+.practicum-card {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-6);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+  cursor: pointer;
+  animation: slide-up 0.6s var(--ease-out) forwards;
+  opacity: 0;
+}
+.practicum-card:nth-child(1) { animation-delay: 0.1s; }
+.practicum-card:nth-child(2) { animation-delay: 0.2s; }
+.practicum-card:nth-child(3) { animation-delay: 0.3s; }
+.practicum-card:nth-child(4) { animation-delay: 0.4s; }
+.practicum-card:nth-child(5) { animation-delay: 0.5s; }
+.practicum-card:nth-child(6) { animation-delay: 0.6s; }
+
+.practicum-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-cyan),
+    var(--accent-blue),
+    var(--accent-purple)
+  );
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.practicum-card:hover {
+  border-color: var(--border-medium);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(0, 229, 255, 0.05);
+}
+.practicum-card:hover::before {
+  opacity: 1;
+}
+
+.practicum-card.coming-soon {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.practicum-card.coming-soon:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.practicum-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.practicum-card-category {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+.practicum-card-category.analog {
+  background: rgba(255, 171, 0, 0.12);
+  color: var(--accent-amber);
+  border: 1px solid rgba(255, 171, 0, 0.25);
+}
+.practicum-card-category.digital {
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--accent-purple);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.practicum-card-code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.practicum-card-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--sp-2);
+  line-height: var(--lh-tight);
+}
+
+.practicum-card-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  line-height: var(--lh-relaxed);
+  margin-bottom: var(--sp-4);
+}
+
+.practicum-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.practicum-card-tag {
+  font-size: 10px;
+  font-weight: var(--fw-medium);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.practicum-card-status {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+.practicum-card-status.available {
+  background: rgba(57, 255, 20, 0.1);
+  color: var(--accent-green);
+  border: 1px solid rgba(57, 255, 20, 0.2);
+}
+.practicum-card-status.coming-soon {
+  background: var(--surface-1);
+  color: var(--text-muted);
+}
+
+/* --- Lab Workbench Page --- */
+.workbench-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.workbench-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-6);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-panel);
+}
+
+.workbench-back-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.workbench-back-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-1);
+}
+
+.workbench-title-section {
+  text-align: center;
+}
+
+.workbench-title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+}
+
+.workbench-code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--accent-cyan);
+}
+
+.workbench-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.workbench-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-6);
+}
+
+.workbench-modules-section {
+  grid-column: 1;
+}
+
+.workbench-instruments-section {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+
+.workbench-connections-section {
+  grid-column: 1 / -1;
+}
+
+.workbench-procedure-section {
+  grid-column: 1;
+}
+
+.workbench-measurements-section {
+  grid-column: 2;
+}
+
+.section-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--accent-cyan);
+  border-radius: 2px;
+}
+
+/* --- Footer --- */
+.landing-footer {
+  text-align: center;
+  padding: var(--sp-8) var(--sp-6);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 1024px) {
+  .workbench-body {
+    grid-template-columns: 1fr;
+    padding: var(--sp-4) var(--sp-3);
+  }
+
+  .workbench-modules-section,
+  .workbench-instruments-section,
+  .workbench-connections-section,
+  .workbench-procedure-section,
+  .workbench-measurements-section {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-content {
+    padding: var(--sp-6) var(--sp-4);
+  }
+
+  .landing-title {
+    font-size: var(--fs-2xl);
+  }
+
+  .practicum-grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-4);
+  }
+
+  .workbench-header {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+  }
+}

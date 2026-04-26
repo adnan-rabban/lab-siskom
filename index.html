@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Virtual Engineering Laboratory Simulator — Interactive PUDAK Scientific PTE-series module simulations for online telecommunications and signal processing practicals." />
+    <meta name="theme-color" content="#060a13" />
+    <meta name="color-scheme" content="dark" />
+    <title>Laboratorium Teknik Virtual — PUDAK Scientific Simulator</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+      /* Prevent FOUC */
+      html { background: #060a13; }
+      body { opacity: 0; transition: opacity 0.2s; }
+      body.loaded { opacity: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Mark body as loaded after first paint
+      window.addEventListener('DOMContentLoaded', () => {
+        requestAnimationFrame(() => document.body.classList.add('loaded'));
+      });
+    </script>
+  </body>
+</html>
