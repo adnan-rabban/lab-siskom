@@ -11,6 +11,8 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  position: relative;
+  z-index: 2;
 }
 
 .knob-label {
@@ -112,6 +114,7 @@
 /* --- Toggle Switch --- */
 .toggle-switch {
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -215,6 +218,8 @@
   gap: 2px;
   cursor: pointer;
   transition: transform var(--duration-fast) var(--ease-out);
+  position: relative;
+  z-index: 2;
 }
 .terminal:hover {
   transform: scale(1.1);
