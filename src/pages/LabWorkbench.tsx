@@ -4,6 +4,7 @@ import { useSignalGraph } from '../engine/SignalGraphContext';
 import { evaluateMeasurements, type GradingResult } from '../engine/GradingEngine';
 import { amModulationConfig, amMeasurementRows } from '../practicums/amModulation';
 import { demodulationConfig, demodMeasurementRows } from '../practicums/demodulation';
+import { fmModulationConfig, fmMeasurementRows } from '../practicums/fmModulation';
 import type { PracticumConfig, SignalNode, Connection, MeasurementRow } from '../engine/types';
 import {
   useWorkbenchPersistence,
@@ -19,6 +20,7 @@ import Amplifier from '../modules/Amplifier';
 import TunedCircuit from '../modules/TunedCircuit';
 import WaveformSynthesis from '../modules/WaveformSynthesis';
 import Detector from '../modules/Detector';
+import FMModulator from '../modules/FMModulator';
 
 // Instruments
 import Oscilloscope from '../instruments/Oscilloscope';
@@ -38,6 +40,7 @@ import ReportExporter from '../components/ReportExporter';
 const practicumRegistry: Record<string, { config: PracticumConfig; rows: MeasurementRow[] }> = {
   'am-modulation': { config: amModulationConfig, rows: amMeasurementRows },
   'demodulation': { config: demodulationConfig, rows: demodMeasurementRows },
+  'fm-modulation': { config: fmModulationConfig, rows: fmMeasurementRows },
 };
 
 // ============================================================
@@ -57,6 +60,8 @@ function renderModule(moduleType: string, nodeId: string) {
       return <WaveformSynthesis key={nodeId} nodeId={nodeId} />;
     case 'detector':
       return <Detector key={nodeId} nodeId={nodeId} />;
+    case 'fm-modulator':
+      return <FMModulator key={nodeId} nodeId={nodeId} />;
     default:
       return null;
   }
@@ -426,6 +431,12 @@ function getPortsForModule(moduleType: string, nodeId: string) {
     case 'detector':
       return [
         { id: 'input', label: 'IN', direction: 'input' as const, nodeId },
+        { id: 'output', label: 'OUT', direction: 'output' as const, nodeId },
+      ];
+    case 'fm-modulator':
+      return [
+        { id: 'carrier-in', label: 'CARRIER', direction: 'input' as const, nodeId },
+        { id: 'mod-in', label: 'MOD IN', direction: 'input' as const, nodeId },
         { id: 'output', label: 'OUT', direction: 'output' as const, nodeId },
       ];
     case 'function-generator':

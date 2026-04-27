@@ -441,6 +441,44 @@ export function processSignalGraph(
       );
     }
 
+    case 'fm-modulator': {
+      const carrierConn = activeConnections.find(
+        c => c.toNodeId === targetNodeId && c.toPortId === 'carrier-in'
+      );
+      const modConn = activeConnections.find(
+        c => c.toNodeId === targetNodeId && c.toPortId === 'mod-in'
+      );
+
+      if (!carrierConn) return new Float32Array(numSamples);
+
+      const carrierNode = nodes.get(carrierConn.fromNodeId);
+      if (!carrierNode) return new Float32Array(numSamples);
+
+      const carrierFreq = carrierNode.params.frequency || 455000;
+      const carrierAmp = carrierNode.params.amplitude || 1;
+
+      if (modConn) {
+        const modNode = nodes.get(modConn.fromNodeId);
+        if (modNode) {
+          const modFreq = modNode.params.frequency || 300;
+          const freqDeviation = node.params.freqDeviation ?? 75000;
+          const modWf = modNode.params.waveform || 'sine';
+
+          return generateFMSignal(
+            carrierFreq, carrierAmp,
+            modFreq, freqDeviation, modWf,
+            numSamples, cyclesToShow
+          );
+        }
+      }
+
+      return processSignalGraph(
+        nodes, connections,
+        carrierConn.fromNodeId, carrierConn.fromPortId,
+        numSamples, cyclesToShow
+      );
+    }
+
     case 'detector': {
       const inputConn = activeConnections.find(
         c => c.toNodeId === targetNodeId && c.toPortId === 'input'

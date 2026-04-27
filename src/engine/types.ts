@@ -31,6 +31,7 @@ export interface SignalParams {
   waveform?: WaveformType;
   dcOffset?: number;       // Volts
   modulationIndex?: number; // 0..1+ for AM
+  freqDeviation?: number;  // Hz, for FM
   attenuation?: number;    // dB
   gain?: number;           // linear multiplier
   tunedFrequency?: number; // Hz, for tuned circuit
@@ -56,6 +57,7 @@ export type ModuleType =
   | 'amplifier'
   | 'tuned-circuit'
   | 'waveform-synthesis'
+  | 'fm-modulator'
   | 'detector'
   | 'data-source'
   | 'data-receiver'
@@ -182,6 +184,13 @@ export interface OscilloscopeState {
   triggerSource: 'CH1' | 'CH2' | 'EXT';
   horizontalOffset: number;
   running: boolean;
+  cursorMode: 'off' | 'time' | 'voltage';
+  cursorPositions: {
+    t1: number; // normalized units or divisions
+    t2: number;
+    v1: number; // normalized units or divisions
+    v2: number;
+  };
 }
 
 // ============================================================

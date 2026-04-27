@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { PracticumConfig } from '../engine/types';
 import { amModulationConfig } from '../practicums/amModulation';
 import { demodulationConfig } from '../practicums/demodulation';
+import { fmModulationConfig } from '../practicums/fmModulation';
 
 // ============================================================
 // All practicums (Phase 2: AM + Demodulation available)
@@ -10,21 +11,7 @@ import { demodulationConfig } from '../practicums/demodulation';
 const practicums: PracticumConfig[] = [
   amModulationConfig,
   demodulationConfig,
-  {
-    id: 'fm-modulation',
-    title: 'Frequency Modulation',
-    titleId: 'Modulasi Frekuensi',
-    moduleCode: 'TE02009',
-    description: 'Generate FM signals and determine the modulation degree of FM waves.',
-    descriptionId: 'Menjelaskan prinsip kerja modulator FM dan menentukan derajat modulasi gelombang FM.',
-    category: 'analog',
-    status: 'coming-soon',
-    requiredModules: [],
-    requiredInstruments: [],
-    requiredConnections: [],
-    procedure: [],
-    observationTargets: [],
-  },
+  fmModulationConfig,
   {
     id: 'digital-signals',
     title: 'Digital Signals',

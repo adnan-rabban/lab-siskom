@@ -24,6 +24,21 @@
   image-rendering: auto;
 }
 
+.cursor-readout {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 0, 255, 0.4);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #ff00ff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 10;
+}
+
 /* CRT scanline effect */
 .oscilloscope-screen-container::after {
   content: '';

@@ -62,6 +62,25 @@ interface ChannelState {
   probeTarget: string | null; // nodeId to probe
 }
 
+// Helpers
+function formatTime(secs: number): string {
+  if (secs < 1e-3) return `${(secs * 1e6).toFixed(1)} µs`;
+  if (secs < 1) return `${(secs * 1e3).toFixed(1)} ms`;
+  return `${secs.toFixed(2)} s`;
+}
+
+function formatFreq(hz: number): string {
+  if (!isFinite(hz)) return '---';
+  if (hz > 1e6) return `${(hz / 1e6).toFixed(2)} MHz`;
+  if (hz > 1e3) return `${(hz / 1e3).toFixed(2)} kHz`;
+  return `${hz.toFixed(1)} Hz`;
+}
+
+function formatVolts(v: number): string {
+  if (v < 1) return `${(v * 1000).toFixed(0)} mV`;
+  return `${v.toFixed(2)} V`;
+}
+
 // ============================================================
 // Component
 // ============================================================
@@ -94,6 +113,10 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     verticalOffset: 0,
     probeTarget: null,
   });
+
+  const [cursorMode, setCursorMode] = useState<'off' | 'time' | 'voltage'>('off');
+  const [cursorPos, setCursorPos] = useState({ t1: 0.25, t2: 0.75, v1: 0.25, v2: 0.75 });
+  const [draggingCursor, setDraggingCursor] = useState<keyof typeof cursorPos | null>(null);
 
   const timePerDiv = TIME_DIV_STEPS[timeDivIndex].value;
   const totalTime = timePerDiv * GRID_DIVS_X; // total time window
@@ -264,7 +287,44 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     ctx.fillStyle = 'rgba(255, 171, 0, 0.8)';
     ctx.textAlign = 'right';
     ctx.fillText(`${TIME_DIV_STEPS[timeDivIndex].label}/div`, cw - 8, 14);
-  }, [state, ch1, ch2, timeDivIndex, totalTime, running]);
+
+    // --- Render Cursors natively on canvas ---
+    if (cursorMode === 'time') {
+      const t1x = cursorPos.t1 * cw;
+      const t2x = cursorPos.t2 * cw;
+      ctx.strokeStyle = '#ff00ff'; // Magenta for cursors
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+
+      // T1
+      ctx.beginPath(); ctx.moveTo(t1x, 0); ctx.lineTo(t1x, ch_h); ctx.stroke();
+      ctx.fillStyle = '#ff00ff';
+      ctx.fillText('T1', t1x + 12, 40);
+
+      // T2
+      ctx.beginPath(); ctx.moveTo(t2x, 0); ctx.lineTo(t2x, ch_h); ctx.stroke();
+      ctx.fillText('T2', t2x + 12, 54);
+
+      ctx.setLineDash([]);
+    } else if (cursorMode === 'voltage') {
+      const v1y = cursorPos.v1 * ch_h;
+      const v2y = cursorPos.v2 * ch_h;
+      ctx.strokeStyle = '#ff00ff';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+
+      // V1
+      ctx.beginPath(); ctx.moveTo(0, v1y); ctx.lineTo(cw, v1y); ctx.stroke();
+      ctx.fillStyle = '#ff00ff';
+      ctx.fillText('V1', 40, v1y - 4);
+
+      // V2
+      ctx.beginPath(); ctx.moveTo(0, v2y); ctx.lineTo(cw, v2y); ctx.stroke();
+      ctx.fillText('V2', 40, v2y - 4);
+
+      ctx.setLineDash([]);
+    }
+  }, [state, ch1, ch2, timeDivIndex, totalTime, running, cursorMode, cursorPos]);
 
   // Animation loop
   useEffect(() => {
@@ -314,8 +374,86 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
       </div>
 
       <div className="instrument-body">
-        <div className="oscilloscope-screen-container">
+        <div 
+          className="oscilloscope-screen-container"
+          onMouseDown={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            const threshold = 0.05;
+
+            if (cursorMode === 'time') {
+              if (Math.abs(x - cursorPos.t1) < threshold) setDraggingCursor('t1');
+              else if (Math.abs(x - cursorPos.t2) < threshold) setDraggingCursor('t2');
+            } else if (cursorMode === 'voltage') {
+              if (Math.abs(y - cursorPos.v1) < threshold) setDraggingCursor('v1');
+              else if (Math.abs(y - cursorPos.v2) < threshold) setDraggingCursor('v2');
+            }
+          }}
+          onMouseMove={(e) => {
+            if (!draggingCursor) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const valX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const valY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+            
+            setCursorPos(prev => ({
+              ...prev,
+              [draggingCursor]: draggingCursor.startsWith('t') ? valX : valY
+            }));
+          }}
+          onMouseUp={() => setDraggingCursor(null)}
+          onMouseLeave={() => setDraggingCursor(null)}
+          onTouchStart={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = (touch.clientX - rect.left) / rect.width;
+            const y = (touch.clientY - rect.top) / rect.height;
+            const threshold = 0.1;
+
+            if (cursorMode === 'time') {
+              if (Math.abs(x - cursorPos.t1) < threshold) setDraggingCursor('t1');
+              else if (Math.abs(x - cursorPos.t2) < threshold) setDraggingCursor('t2');
+            } else if (cursorMode === 'voltage') {
+              if (Math.abs(y - cursorPos.v1) < threshold) setDraggingCursor('v1');
+              else if (Math.abs(y - cursorPos.v2) < threshold) setDraggingCursor('v2');
+            }
+          }}
+          onTouchMove={(e) => {
+            if (!draggingCursor) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const touch = e.touches[0];
+            const valX = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+            const valY = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
+            
+            setCursorPos(prev => ({
+              ...prev,
+              [draggingCursor]: draggingCursor.startsWith('t') ? valX : valY
+            }));
+          }}
+          onTouchEnd={() => setDraggingCursor(null)}
+          style={{ cursor: draggingCursor ? (cursorMode === 'time' ? 'ew-resize' : 'ns-resize') : 'default' }}
+        >
           <canvas ref={canvasRef} className="oscilloscope-canvas" />
+          
+          {/* Measurement Readout Overlay */}
+          {cursorMode !== 'off' && (
+            <div className="cursor-readout">
+              {cursorMode === 'time' && (
+                <>
+                  <div>Δt: {formatTime(Math.abs(cursorPos.t2 - cursorPos.t1) * totalTime)}</div>
+                  <div>1/Δt: {formatFreq(1 / (Math.abs(cursorPos.t2 - cursorPos.t1) * totalTime))}</div>
+                </>
+              )}
+              {cursorMode === 'voltage' && (
+                <>
+                  <div>ΔV (CH1): {formatVolts(Math.abs(cursorPos.v2 - cursorPos.v1) * GRID_DIVS_Y * VOLTS_DIV_STEPS[ch1.voltsDivIndex].value)}</div>
+                  {ch2.enabled && (
+                    <div>ΔV (CH2): {formatVolts(Math.abs(cursorPos.v2 - cursorPos.v1) * GRID_DIVS_Y * VOLTS_DIV_STEPS[ch2.voltsDivIndex].value)}</div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -426,6 +564,25 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
             />
             <div className="time-display">
               {TIME_DIV_STEPS[timeDivIndex].label}/div
+            </div>
+          </div>
+          
+          {/* Cursor Controls */}
+          <div className="cursor-controls">
+             <span className="text-xs text-muted" style={{ fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              CURSORS
+            </span>
+            <div className="coupling-selector" style={{ marginTop: '8px' }}>
+              {(['off', 'time', 'voltage'] as const).map(mode => (
+                <span
+                  key={mode}
+                  className={`coupling-option ${cursorMode === mode ? 'active' : ''}`}
+                  onClick={() => setCursorMode(mode)}
+                  style={{ textTransform: 'uppercase', fontSize: '10px' }}
+                >
+                  {mode}
+                </span>
+              ))}
             </div>
           </div>
         </div>
