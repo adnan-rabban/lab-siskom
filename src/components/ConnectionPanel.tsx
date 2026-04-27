@@ -4,10 +4,23 @@ import ToggleSwitch from './ToggleSwitch';
 
 interface ConnectionPanelProps {
   connections: Connection[];
+  connectedCount?: number;
+  totalCount?: number;
+  onConnectAll?: () => void;
+  onDisconnectAll?: () => void;
 }
 
-export default function ConnectionPanel({ connections }: ConnectionPanelProps) {
+export default function ConnectionPanel({
+  connections,
+  connectedCount,
+  totalCount,
+  onConnectAll,
+  onDisconnectAll,
+}: ConnectionPanelProps) {
   const { state, dispatch, t } = useSignalGraph();
+
+  const connected = connectedCount ?? connections.filter(c => c.connected).length;
+  const total = totalCount ?? connections.length;
 
   const getPortLabel = (nodeId: string, portId: string): string => {
     const node = state.nodes.get(nodeId);
@@ -23,7 +36,7 @@ export default function ConnectionPanel({ connections }: ConnectionPanelProps) {
           {t('Koneksi Kabel', 'Wire Connections')}
         </span>
         <span className="text-xs text-muted">
-          {connections.filter(c => c.connected).length}/{connections.length} {t('terhubung', 'connected')}
+          {connected}/{total} {t('terhubung', 'connected')}
         </span>
       </div>
       <div>
@@ -52,6 +65,20 @@ export default function ConnectionPanel({ connections }: ConnectionPanelProps) {
           );
         })}
       </div>
+      {(onConnectAll || onDisconnectAll) && (
+        <div className="connection-panel-actions">
+          {onConnectAll && (
+            <button className="btn btn-secondary btn-sm" onClick={onConnectAll}>
+              ⚡ {t('Hubungkan Semua', 'Connect All')}
+            </button>
+          )}
+          {onDisconnectAll && (
+            <button className="btn btn-secondary btn-sm" onClick={onDisconnectAll}>
+              ✕ {t('Lepas Semua', 'Disconnect All')}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

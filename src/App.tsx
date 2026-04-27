@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { SignalGraphProvider } from './engine/SignalGraphContext';
+import { ToastProvider } from './components/Toast';
 import Landing from './pages/Landing';
 import LabWorkbench from './pages/LabWorkbench';
 
@@ -14,10 +15,12 @@ function App() {
   return (
     <BrowserRouter>
       <SignalGraphProvider>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/lab/:practicumId" element={<LabWorkbench />} />
-        </Routes>
+        <ToastProvider>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/lab/:practicumId" element={<LabWorkbench />} />
+          </Routes>
+        </ToastProvider>
       </SignalGraphProvider>
     </BrowserRouter>
   );

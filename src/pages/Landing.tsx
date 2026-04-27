@@ -2,27 +2,14 @@ import { useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PracticumConfig } from '../engine/types';
 import { amModulationConfig } from '../practicums/amModulation';
+import { demodulationConfig } from '../practicums/demodulation';
 
 // ============================================================
-// All practicums (Phase 1: only AM is available)
+// All practicums (Phase 2: AM + Demodulation available)
 // ============================================================
 const practicums: PracticumConfig[] = [
   amModulationConfig,
-  {
-    id: 'demodulation',
-    title: 'Demodulation',
-    titleId: 'Demodulasi',
-    moduleCode: 'TE02007',
-    description: 'Study the working principle and function of a demodulator circuit.',
-    descriptionId: 'Menjelaskan prinsip kerja dan fungsi sebuah demodulator.',
-    category: 'analog',
-    status: 'coming-soon',
-    requiredModules: [],
-    requiredInstruments: [],
-    requiredConnections: [],
-    procedure: [],
-    observationTargets: [],
-  },
+  demodulationConfig,
   {
     id: 'fm-modulation',
     title: 'Frequency Modulation',

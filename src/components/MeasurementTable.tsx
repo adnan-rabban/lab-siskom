@@ -1,85 +1,61 @@
-import { useState, useCallback, useMemo } from 'react';
-import type { MeasurementRow } from '../engine/types';
+import { useMemo } from 'react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
+import type { MeasurementRow } from '../engine/types';
 
 interface MeasurementTableProps {
   title: string;
   titleId: string;
   rows: MeasurementRow[];
-  onValuesChange?: (rowId: string, fieldId: string, value: string) => void;
+  values?: Record<string, Record<string, string>>;
+  onValueChange?: (rowId: string, fieldId: string, value: string) => void;
+  onSubmitGrading?: () => void;
+  t?: (id: string, en: string) => string;
 }
 
 export default function MeasurementTable({
   title,
   titleId,
   rows,
-  onValuesChange,
+  values = {},
+  onValueChange,
+  onSubmitGrading,
+  t: tProp,
 }: MeasurementTableProps) {
-  const { t } = useSignalGraph();
-  const [values, setValues] = useState<Record<string, Record<string, string>>>(() => {
-    const init: Record<string, Record<string, string>> = {};
+  const { t: contextT } = useSignalGraph();
+  const t = tProp || contextT;
+
+  // Calculate computed fields
+  const computedValues = useMemo(() => {
+    const result: Record<string, Record<string, number>> = {};
     for (const row of rows) {
-      init[row.id] = {};
+      if (!row.calculated) continue;
+      const rowVals = values[row.id] || {};
+      const parsedFields: Record<string, number> = {};
       for (const field of row.fields) {
-        init[row.id][field.fieldId] = field.value || '';
+        const v = parseFloat(rowVals[field.fieldId] || '');
+        parsedFields[field.fieldId] = isNaN(v) ? 0 : v;
       }
-    }
-    return init;
-  });
-
-  const handleChange = useCallback(
-    (rowId: string, fieldId: string, value: string) => {
-      setValues(prev => ({
-        ...prev,
-        [rowId]: { ...prev[rowId], [fieldId]: value },
-      }));
-      onValuesChange?.(rowId, fieldId, value);
-    },
-    [onValuesChange]
-  );
-
-  // Compute calculated fields
-  const calculatedValues = useMemo(() => {
-    const result: Record<string, Record<string, string>> = {};
-    for (const row of rows) {
-      if (row.calculated) {
-        result[row.id] = {};
-        for (const calc of row.calculated) {
-          const fields: Record<string, number> = {};
-          for (const f of row.fields) {
-            fields[f.fieldId] = parseFloat(values[row.id]?.[f.fieldId] || '0') || 0;
-          }
-          try {
-            const val = calc.compute(fields);
-            result[row.id][calc.fieldId] = isNaN(val) ? '—' : val.toFixed(2);
-          } catch {
-            result[row.id][calc.fieldId] = '—';
-          }
-        }
+      result[row.id] = {};
+      for (const calc of row.calculated) {
+        result[row.id][calc.fieldId] = calc.compute(parsedFields);
       }
     }
     return result;
   }, [rows, values]);
 
-  // Get all unique field headers
-  const fieldHeaders = useMemo(() => {
-    if (rows.length === 0) return [];
-    const headers = rows[0].fields.map(f => ({
-      fieldId: f.fieldId,
-      label: f.fieldLabel,
-      unit: f.unit,
-    }));
-    if (rows[0].calculated) {
-      for (const calc of rows[0].calculated) {
-        headers.push({
-          fieldId: calc.fieldId,
-          label: calc.fieldLabel,
-          unit: calc.unit,
-        });
-      }
+  const handleInputChange = (rowId: string, fieldId: string, value: string) => {
+    if (onValueChange) {
+      onValueChange(rowId, fieldId, value);
     }
-    return headers;
-  }, [rows]);
+  };
+
+  // Check if all fields have values
+  const allFilled = rows.every(row =>
+    row.fields.every(f => {
+      const v = values[row.id]?.[f.fieldId];
+      return v && v.trim() !== '';
+    })
+  );
 
   return (
     <div className="measurement-table-container">
@@ -90,32 +66,33 @@ export default function MeasurementTable({
         <thead>
           <tr>
             <th>{t('Pengukuran', 'Measurement')}</th>
-            {fieldHeaders.map(h => (
-              <th key={h.fieldId}>
-                {h.label} {h.unit && <span className="text-muted">({h.unit})</span>}
-              </th>
+            {rows[0]?.fields.map(f => (
+              <th key={f.fieldId}>{f.fieldLabel} ({f.unit})</th>
+            ))}
+            {rows[0]?.calculated?.map(c => (
+              <th key={c.fieldId}>{c.fieldLabel} ({c.unit})</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map(row => (
             <tr key={row.id}>
-              <td>{row.label}</td>
+              <td style={{ fontWeight: 'var(--fw-semibold)' as any }}>{row.label}</td>
               {row.fields.map(field => (
                 <td key={field.fieldId}>
                   <input
-                    type="text"
-                    value={values[row.id]?.[field.fieldId] || ''}
-                    onChange={e => handleChange(row.id, field.fieldId, e.target.value)}
-                    placeholder="—"
-                    aria-label={`${row.label} ${field.fieldLabel}`}
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={values[row.id]?.[field.fieldId] ?? ''}
+                    onChange={e => handleInputChange(row.id, field.fieldId, e.target.value)}
                   />
                 </td>
               ))}
               {row.calculated?.map(calc => (
                 <td key={calc.fieldId}>
                   <span className="measurement-calculated">
-                    {calculatedValues[row.id]?.[calc.fieldId] ?? '—'} {calc.unit}
+                    {computedValues[row.id]?.[calc.fieldId]?.toFixed(1) ?? '—'}
                   </span>
                 </td>
               ))}
@@ -123,6 +100,31 @@ export default function MeasurementTable({
           ))}
         </tbody>
       </table>
+
+      {onSubmitGrading && (
+        <div style={{
+          padding: 'var(--sp-3) var(--sp-4)',
+          borderTop: '1px solid var(--border-subtle)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 'var(--sp-3)',
+          background: 'var(--bg-panel)',
+        }}>
+          {!allFilled && (
+            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-amber)', alignSelf: 'center' }}>
+              {t('Isi semua kolom terlebih dahulu', 'Fill all fields first')}
+            </span>
+          )}
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={onSubmitGrading}
+            disabled={!allFilled}
+            style={{ opacity: allFilled ? 1 : 0.5 }}
+          >
+            📊 {t('Kirim untuk Penilaian', 'Submit for Grading')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

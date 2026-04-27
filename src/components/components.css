@@ -725,3 +725,294 @@
   background: var(--accent-cyan);
   color: var(--bg-primary);
 }
+
+/* --- Toast Notifications --- */
+.toast-container {
+  position: fixed;
+  bottom: var(--sp-6);
+  right: var(--sp-6);
+  z-index: var(--z-tooltip);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--sp-2);
+  pointer-events: none;
+}
+
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: slide-up 0.3s var(--ease-out) forwards;
+  border: 1px solid;
+}
+
+.toast-icon {
+  font-size: var(--fs-md);
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.toast-info {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: var(--accent-cyan);
+}
+.toast-success {
+  background: rgba(57, 255, 20, 0.12);
+  border-color: rgba(57, 255, 20, 0.3);
+  color: var(--accent-green);
+}
+.toast-warning {
+  background: rgba(255, 171, 0, 0.12);
+  border-color: rgba(255, 171, 0, 0.3);
+  color: var(--accent-amber);
+}
+.toast-error {
+  background: rgba(255, 61, 61, 0.12);
+  border-color: rgba(255, 61, 61, 0.3);
+  color: var(--accent-red);
+}
+
+/* --- ScoreCard Modal --- */
+.scorecard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  animation: fade-in 0.2s var(--ease-out);
+}
+
+.scorecard-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+}
+
+.scorecard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-6);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.scorecard-title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+}
+
+.scorecard-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.scorecard-close:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.scorecard-body {
+  padding: var(--sp-6);
+}
+
+.scorecard-ring-section {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto var(--sp-4);
+}
+
+.scorecard-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.scorecard-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scorecard-percentage {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-black);
+}
+
+.scorecard-grade {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.scorecard-summary {
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.scorecard-details {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.scorecard-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.scorecard-field-icon {
+  width: 20px;
+  text-align: center;
+  font-weight: var(--fw-bold);
+  flex-shrink: 0;
+}
+
+.scorecard-field-correct .scorecard-field-icon { color: var(--accent-green); }
+.scorecard-field-close .scorecard-field-icon { color: var(--accent-amber); }
+.scorecard-field-incorrect .scorecard-field-icon { color: var(--accent-red); }
+.scorecard-field-unanswered .scorecard-field-icon { color: var(--text-muted); }
+
+.scorecard-field-label {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.scorecard-field-value {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.scorecard-field-expected {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  margin-left: var(--sp-1);
+}
+
+.scorecard-field-points {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+.scorecard-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* --- Detector Module Extras --- */
+.detector-type-selector {
+  display: flex;
+  gap: var(--sp-1);
+  padding: 2px;
+  background: var(--surface-1);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.detector-type-btn {
+  padding: 4px 12px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--radius-full);
+  transition: all var(--duration-fast) var(--ease-out);
+  color: var(--text-muted);
+}
+.detector-type-btn.active {
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
+}
+
+/* --- Auto-Save Indicator --- */
+.autosave-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.autosave-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green-dim);
+  transition: background 0.3s;
+}
+.autosave-dot.saving {
+  background: var(--accent-amber);
+  animation: pulse-glow 0.5s ease-in-out infinite;
+}
+
+/* --- Step Guide Progress Bar --- */
+.step-guide-progress {
+  height: 3px;
+  background: var(--surface-1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 var(--sp-4) var(--sp-2);
+}
+.step-guide-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+  border-radius: 2px;
+  transition: width 0.4s var(--ease-out);
+}
+
+/* --- Connection Panel Extras --- */
+.connection-panel-actions {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+}
+
+.connection-row.highlighted {
+  background: rgba(0, 229, 255, 0.04);
+  border-left: 2px solid var(--accent-cyan);
+}
+
+.connection-row.highlighted .toggle-track {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
