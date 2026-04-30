@@ -10,6 +10,7 @@ import './components/components.css';
 import './modules/modules.css';
 import './instruments/instruments.css';
 import './pages/pages.css';
+import './pages/canvas.css'; // ← Infinite canvas styles
 
 function App() {
   return (
