@@ -68,8 +68,8 @@
   background: var(--surface-2);
 }
 .component-option.active {
-  background: var(--accent-cyan-dim);
-  border-color: var(--accent-cyan);
+  background: var(--accent-primary-dim);
+  border-color: var(--accent-primary);
   color: var(--text-primary);
 }
 

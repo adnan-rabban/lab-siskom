@@ -145,11 +145,11 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     const ch_h = rect.height;
 
     // --- Background ---
-    ctx.fillStyle = '#050a08';
+    ctx.fillStyle = '#080808';
     ctx.fillRect(0, 0, cw, ch_h);
 
     // --- Grid ---
-    ctx.strokeStyle = 'rgba(57, 255, 20, 0.12)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 0.5;
 
     // Vertical grid lines
@@ -171,7 +171,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     }
 
     // Center crosshair (brighter)
-    ctx.strokeStyle = 'rgba(57, 255, 20, 0.3)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cw / 2, 0);
@@ -181,7 +181,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     ctx.stroke();
 
     // --- Center dot markers ---
-    ctx.fillStyle = 'rgba(57, 255, 20, 0.25)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     for (let i = 0; i <= GRID_DIVS_X; i++) {
       const x = (i / GRID_DIVS_X) * cw;
       ctx.beginPath();
@@ -198,7 +198,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     if (!state.powerOn || !running) {
       // Show "NO SIGNAL" text when powered off
       ctx.font = '12px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(57, 255, 20, 0.3)';
+      ctx.fillStyle = 'rgba(255, 92, 0, 0.4)';
       ctx.textAlign = 'center';
       ctx.fillText(state.powerOn ? 'STOPPED' : 'POWER OFF', cw / 2, ch_h / 2 + 4);
       return;
@@ -267,24 +267,24 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
       ctx.shadowBlur = 0;
     };
 
-    renderChannel(ch1, '#39ff14', 'rgba(57, 255, 20, 0.5)');
-    renderChannel(ch2, '#00e5ff', 'rgba(0, 229, 255, 0.5)');
+    renderChannel(ch1, '#4ADE80', 'rgba(74, 222, 128, 0.5)');
+    renderChannel(ch2, '#FF5C00', 'rgba(255, 92, 0, 0.5)');
 
     // --- Channel labels ---
     ctx.font = '10px "JetBrains Mono", monospace';
     if (ch1.enabled) {
-      ctx.fillStyle = '#39ff14';
+      ctx.fillStyle = '#4ADE80';
       ctx.textAlign = 'left';
       ctx.fillText(`CH1: ${VOLTS_DIV_STEPS[ch1.voltsDivIndex].label}/div`, 8, 14);
     }
     if (ch2.enabled) {
-      ctx.fillStyle = '#00e5ff';
+      ctx.fillStyle = '#FF5C00';
       ctx.textAlign = 'left';
       ctx.fillText(`CH2: ${VOLTS_DIV_STEPS[ch2.voltsDivIndex].label}/div`, 8, 28);
     }
 
     // Time/div label
-    ctx.fillStyle = 'rgba(255, 171, 0, 0.8)';
+    ctx.fillStyle = 'rgba(255, 138, 0, 0.8)';
     ctx.textAlign = 'right';
     ctx.fillText(`${TIME_DIV_STEPS[timeDivIndex].label}/div`, cw - 8, 14);
 

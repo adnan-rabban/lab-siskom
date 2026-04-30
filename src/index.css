@@ -1,6 +1,7 @@
 /* ============================================================
    DESIGN SYSTEM — Virtual Laboratory Simulator
-   Dark electronics workbench theme
+   Mono Theme — Dark editorial (Framer / Vercel inspired)
+   Black + Orange · Structured · Minimal
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -9,42 +10,48 @@
    Design Tokens
    ============================================================ */
 :root {
-  /* --- Colors: Primary Dark Palette --- */
-  --bg-primary: #060a13;
-  --bg-secondary: #0c1220;
-  --bg-panel: #111827;
-  --bg-module: #1a2237;
-  --bg-elevated: #1f2b42;
-  --bg-input: #0d1424;
+  /* --- Colors: Primary Dark Palette (Mono) --- */
+  --bg-primary: #0C0C0C;
+  --bg-secondary: #0E0E0E;
+  --bg-panel: #141414;
+  --bg-module: #161616;
+  --bg-elevated: #1C1C1C;
+  --bg-input: #111111;
 
-  /* --- Colors: Accent --- */
-  --accent-cyan: #00e5ff;
-  --accent-cyan-dim: #007a8a;
-  --accent-amber: #ffab00;
-  --accent-amber-dim: #8a5e00;
-  --accent-green: #39ff14;
-  --accent-green-dim: #1a7a0a;
-  --accent-red: #ff3d3d;
-  --accent-red-dim: #8a1f1f;
-  --accent-blue: #4488ff;
-  --accent-purple: #a855f7;
+  /* --- Colors: Accent (Orange-based) --- */
+  --accent-primary: #FF5C00;
+  --accent-primary-dim: rgba(255, 92, 0, 0.25);
+  --accent-primary-subtle: rgba(255, 92, 0, 0.08);
+  --accent-amber: #FF8A00;
+  --accent-amber-dim: rgba(255, 138, 0, 0.25);
+  --accent-green: #4ADE80;
+  --accent-green-dim: rgba(74, 222, 128, 0.2);
+  --accent-red: #EF4444;
+  --accent-red-dim: rgba(239, 68, 68, 0.2);
+  --accent-blue: #3B82F6;
+  --accent-purple: #A855F7;
+
+  /* Backwards compat aliases */
+  --accent-cyan: var(--accent-primary);
+  --accent-cyan-dim: var(--accent-primary-dim);
 
   /* --- Colors: Surface --- */
-  --surface-1: #1e293b;
-  --surface-2: #2a3654;
-  --surface-3: #374768;
+  --surface-1: #1E1E1E;
+  --surface-2: #262626;
+  --surface-3: #2E2E2E;
   --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-medium: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-accent: rgba(255, 92, 0, 0.4);
 
-  /* --- Colors: Text --- */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-accent: var(--accent-cyan);
+  /* --- Colors: Text (Warm off-white) --- */
+  --text-primary: #F0EFE8;
+  --text-secondary: rgba(240, 239, 232, 0.6);
+  --text-muted: rgba(240, 239, 232, 0.35);
+  --text-accent: var(--accent-primary);
 
   /* --- Typography --- */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --fs-xs: 0.6875rem;   /* 11px */
@@ -88,16 +95,19 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* --- Shadows --- */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
-  --shadow-glow-cyan: 0 0 20px rgba(0, 229, 255, 0.3);
-  --shadow-glow-green: 0 0 20px rgba(57, 255, 20, 0.3);
-  --shadow-glow-amber: 0 0 20px rgba(255, 171, 0, 0.3);
-  --shadow-glow-red: 0 0 20px rgba(255, 61, 61, 0.3);
-  --shadow-inset: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  /* --- Shadows (Mono — deep & subtle) --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.8);
+  --shadow-glow-primary: 0 0 20px rgba(255, 92, 0, 0.25);
+  --shadow-glow-green: 0 0 20px rgba(74, 222, 128, 0.25);
+  --shadow-glow-amber: 0 0 20px rgba(255, 138, 0, 0.25);
+  --shadow-glow-red: 0 0 20px rgba(239, 68, 68, 0.25);
+  --shadow-inset: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+
+  /* Backwards compat */
+  --shadow-glow-cyan: var(--shadow-glow-primary);
 
   /* --- Transitions --- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -141,7 +151,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Hide scrollbar */
+/* Minimal scrollbar — Mono style */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -158,7 +168,7 @@ body {
 }
 
 a {
-  color: var(--accent-cyan);
+  color: var(--accent-primary);
   text-decoration: none;
   transition: color var(--duration-fast) var(--ease-out);
 }
@@ -215,7 +225,7 @@ img {
   inset: -2px;
   background: radial-gradient(
     ellipse at center,
-    rgba(57, 255, 20, 0.05) 0%,
+    rgba(255, 92, 0, 0.04) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -245,7 +255,7 @@ img {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.06),
     transparent
   );
   pointer-events: none;
@@ -254,7 +264,7 @@ img {
 .module-panel.powered-on {
   border-color: var(--border-medium);
   box-shadow: var(--shadow-md), var(--shadow-inset),
-              0 0 1px rgba(0, 229, 255, 0.1);
+              0 0 1px rgba(255, 92, 0, 0.15);
 }
 .module-panel.powered-off {
   opacity: 0.5;
@@ -289,8 +299,8 @@ img {
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
-  background: var(--accent-cyan-dim);
-  color: var(--text-primary);
+  background: var(--accent-primary-dim);
+  color: var(--accent-primary);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   letter-spacing: 0.05em;
@@ -387,13 +397,13 @@ img {
 }
 
 .btn-primary {
-  background: var(--accent-cyan);
+  background: var(--accent-primary);
   color: var(--bg-primary);
-  box-shadow: var(--shadow-glow-cyan);
+  box-shadow: var(--shadow-glow-primary);
 }
 .btn-primary:hover {
-  background: #33ebff;
-  box-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+  background: #FF7A33;
+  box-shadow: 0 0 30px rgba(255, 92, 0, 0.45);
   transform: translateY(-1px);
 }
 
@@ -412,7 +422,7 @@ img {
   color: white;
 }
 .btn-danger:hover {
-  background: #ff5555;
+  background: #f87171;
   box-shadow: var(--shadow-glow-red);
 }
 
@@ -471,6 +481,11 @@ img {
 @keyframes waveform-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-100%); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(255, 92, 0, 0.15); }
+  50% { border-color: rgba(255, 92, 0, 0.35); }
 }
 
 .animate-fade-in {

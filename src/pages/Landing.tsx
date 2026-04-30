@@ -87,10 +87,10 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
 
       // Subtle animated waveforms
       const waves = [
-        { color: 'rgba(0, 229, 255, 0.04)', freq: 0.003, amp: 60, speed: 0.015, yOffset: h * 0.3 },
-        { color: 'rgba(57, 255, 20, 0.03)', freq: 0.005, amp: 40, speed: 0.02, yOffset: h * 0.5 },
-        { color: 'rgba(255, 171, 0, 0.025)', freq: 0.004, amp: 50, speed: 0.01, yOffset: h * 0.7 },
-        { color: 'rgba(168, 85, 247, 0.02)', freq: 0.006, amp: 30, speed: 0.025, yOffset: h * 0.85 },
+        { color: 'rgba(255, 92, 0, 0.04)', freq: 0.003, amp: 60, speed: 0.015, yOffset: h * 0.3 },
+        { color: 'rgba(255, 92, 0, 0.025)', freq: 0.005, amp: 40, speed: 0.02, yOffset: h * 0.5 },
+        { color: 'rgba(240, 239, 232, 0.02)', freq: 0.004, amp: 50, speed: 0.01, yOffset: h * 0.7 },
+        { color: 'rgba(255, 138, 0, 0.02)', freq: 0.006, amp: 30, speed: 0.025, yOffset: h * 0.85 },
       ];
 
       for (const wave of waves) {
@@ -108,7 +108,7 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
 
       // Grid dots
       const gridSize = 60;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
       for (let x = 0; x < w; x += gridSize) {
         for (let y = 0; y < h; y += gridSize) {
           ctx.beginPath();
@@ -158,7 +158,7 @@ export default function Landing() {
           <h1 className="landing-title">
             Laboratorium Teknik
             <br />
-            Virtual
+            <span style={{ color: '#FF5C00' }}>Virtual</span>
           </h1>
           <p className="landing-subtitle">
             Simulasi interaktif peralatan laboratorium PUDAK Scientific PTE-series
