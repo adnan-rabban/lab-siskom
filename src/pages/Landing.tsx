@@ -185,7 +185,12 @@ export default function Landing() {
                   <span className={`practicum-card-category ${p.category}`}>
                     {p.category}
                   </span>
-                  <span className="practicum-card-code">{p.moduleCode}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`practicum-card-status ${p.status}`}>
+                      {p.status === 'available' ? '● Ready' : '○ Coming Soon'}
+                    </span>
+                    <span className="practicum-card-code">{p.moduleCode}</span>
+                  </div>
                 </div>
                 <h2 className="practicum-card-title">{p.titleId}</h2>
                 <p className="practicum-card-desc">{p.descriptionId}</p>
@@ -197,9 +202,6 @@ export default function Landing() {
                     <span className="practicum-card-tag">+{p.requiredModules.length - 3}</span>
                   )}
                 </div>
-                <span className={`practicum-card-status ${p.status}`}>
-                  {p.status === 'available' ? '● Ready' : '○ Coming Soon'}
-                </span>
               </div>
             ))}
           </div>

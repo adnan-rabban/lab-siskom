@@ -181,12 +181,10 @@
 }
 
 .practicum-card-status {
-  position: absolute;
-  top: var(--sp-4);
-  right: var(--sp-4);
   font-size: 10px;
   font-weight: var(--fw-medium);
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 .practicum-card-status.available {
   color: var(--accent-green);
