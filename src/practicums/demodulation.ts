@@ -255,6 +255,7 @@ export const demodMeasurementRows: MeasurementRow[] = [
   {
     id: 'demod-50',
     label: 'm = 50%',
+    targetId: 'mod-index-50-demod',
     fields: [
       { fieldId: 'emax', fieldLabel: 'Emax (demod)', unit: 'V', value: '' },
       { fieldId: 'emin', fieldLabel: 'Emin (demod)', unit: 'V', value: '' },

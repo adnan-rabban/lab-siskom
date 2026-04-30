@@ -190,11 +190,11 @@ export function applyTunedCircuit(
 /**
  * Envelope detector (diode detector simulation).
  * Extracts the AM envelope from a modulated signal.
+ * @param decay RC time constant (0..1), default 0.995
  */
-export function envelopeDetect(signal: Float32Array): Float32Array {
+export function envelopeDetect(signal: Float32Array, decay: number = 0.995): Float32Array {
   const output = new Float32Array(signal.length);
   let prevOutput = 0;
-  const decay = 0.995; // RC time constant simulation
 
   for (let i = 0; i < signal.length; i++) {
     const rectified = Math.abs(signal[i]);
@@ -207,6 +207,39 @@ export function envelopeDetect(signal: Float32Array): Float32Array {
   }
 
   return output;
+}
+
+/**
+ * Product detector — multiplies the modulated signal with a local carrier
+ * to extract the baseband (information) signal.
+ * Suitable for SSB and DSB-SC demodulation.
+ */
+export function productDetect(
+  signal: Float32Array,
+  carrierFreq: number,
+  cyclesToShow: number,
+  decay: number = 0.995
+): Float32Array {
+  const output = new Float32Array(signal.length);
+
+  for (let i = 0; i < signal.length; i++) {
+    const t = (i / signal.length) * cyclesToShow;
+    // Multiply by local oscillator (carrier replica)
+    const localOsc = Math.sin(TWO_PI * t);
+    output[i] = signal[i] * localOsc;
+  }
+
+  // Apply low-pass filtering (simple moving average) to extract baseband
+  const windowSize = Math.max(4, Math.floor(signal.length / (cyclesToShow * 2)));
+  const filtered = new Float32Array(signal.length);
+  let sum = 0;
+  for (let i = 0; i < signal.length; i++) {
+    sum += output[i];
+    if (i >= windowSize) sum -= output[i - windowSize];
+    filtered[i] = sum / Math.min(i + 1, windowSize);
+  }
+
+  return filtered;
 }
 
 // ============================================================
@@ -345,6 +378,11 @@ export function processSignalGraph(
     }
 
     case 'function-generator': {
+      // If the function generator is disabled, output silence
+      if (node.params.enabled === false) {
+        return new Float32Array(numSamples);
+      }
+
       const freq = node.params.frequency || 300;
       const amp = node.params.amplitude || 1;
       const wf = node.params.waveform || 'sine';
@@ -492,7 +530,18 @@ export function processSignalGraph(
       );
       if (!inputSignal) return new Float32Array(numSamples);
 
-      return envelopeDetect(inputSignal);
+      const detDecay = (node.params.decay as number) ?? 0.995;
+      const detType = (node.params.detectorType as string) ?? 'diode';
+
+      if (detType === 'product') {
+        // Product detector: needs carrier frequency from upstream
+        const inputNode = nodes.get(inputConn.fromNodeId);
+        const carrierFreq = inputNode?.params.frequency || 455000;
+        return productDetect(inputSignal, carrierFreq, cyclesToShow, detDecay);
+      }
+
+      // Default: diode (envelope) detector
+      return envelopeDetect(inputSignal, detDecay);
     }
 
     default:

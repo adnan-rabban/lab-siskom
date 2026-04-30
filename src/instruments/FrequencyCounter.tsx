@@ -44,10 +44,23 @@ export default function FrequencyCounter({ probeTargets = [] }: FrequencyCounter
       );
 
       if (signal) {
-        const estimated = estimateFrequency(signal, freq, 10);
-        setMeasuredFreq(estimated);
+        // FEAT-05 fix: Check if signal is actually non-zero (connected & active)
+        let hasSignal = false;
+        for (let i = 0; i < signal.length; i++) {
+          if (Math.abs(signal[i]) > 0.001) {
+            hasSignal = true;
+            break;
+          }
+        }
+
+        if (hasSignal) {
+          const estimated = estimateFrequency(signal, freq, 10);
+          setMeasuredFreq(estimated);
+        } else {
+          setMeasuredFreq(0);
+        }
       } else {
-        setMeasuredFreq(freq);
+        setMeasuredFreq(0);
       }
     };
 

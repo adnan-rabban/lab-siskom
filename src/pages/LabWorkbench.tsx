@@ -1,5 +1,5 @@
 import {
-  useEffect, useState, useMemo, useCallback, useRef, useLayoutEffect,
+  useEffect, useState, useMemo, useCallback, useRef,
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSignalGraph } from '../engine/SignalGraphContext';
@@ -292,6 +292,48 @@ export default function LabWorkbench() {
     state.nodes as any, currentStep, measurementValues,
   );
 
+  // FEAT-01 & FEAT-02: Auto-apply paramChanges & requiredConnections when step changes
+  const handleStepChange = useCallback((stepNumber: number) => {
+    if (!config) return;
+    setCurrentStep(stepNumber);
+
+    const step = config.procedure.find(s => s.stepNumber === stepNumber);
+    if (!step) return;
+
+    // Auto-apply param changes for this step
+    if (step.paramChanges && step.paramChanges.length > 0) {
+      for (const change of step.paramChanges) {
+        dispatch({
+          type: 'UPDATE_NODE_PARAMS',
+          nodeId: change.nodeId,
+          params: change.params,
+        });
+      }
+      addToast(
+        t('Parameter disesuaikan otomatis', 'Parameters auto-adjusted'),
+        'info'
+      );
+    }
+
+    // Auto-connect required connections for this step
+    if (step.requiredConnections && step.requiredConnections.length > 0) {
+      let newlyConnected = 0;
+      for (const connId of step.requiredConnections) {
+        const conn = state.connections.find(c => c.id === connId);
+        if (conn && !conn.connected) {
+          dispatch({ type: 'TOGGLE_CONNECTION', connectionId: connId });
+          newlyConnected++;
+        }
+      }
+      if (newlyConnected > 0) {
+        addToast(
+          t(`${newlyConnected} kabel terhubung otomatis`, `${newlyConnected} wire(s) auto-connected`),
+          'success'
+        );
+      }
+    }
+  }, [config, dispatch, state.connections, addToast, t]);
+
   // ── Widget Helpers ────────────────────────────────────────
   const getWidgetPos = useCallback((id: string, meta: WidgetMeta): WidgetPosition => {
     return widgetPositions[id] ?? meta.defaultPos;
@@ -353,6 +395,16 @@ export default function LabWorkbench() {
   }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
+    // BUG-08 fix: Don't zoom when scrolling inside widgets
+    const target = e.target as HTMLElement;
+    if (target.closest('.canvas-widget-body') || target.closest('.canvas-widget')) {
+      // Check if the widget content is scrollable
+      const widgetBody = target.closest('.canvas-widget-body') as HTMLElement;
+      if (widgetBody && widgetBody.scrollHeight > widgetBody.clientHeight) {
+        return; // Let native scroll work inside scrollable widget
+      }
+    }
+
     e.preventDefault();
     const rect = canvasRef.current!.getBoundingClientRect();
     const cursorX = e.clientX - rect.left;
@@ -491,7 +543,7 @@ export default function LabWorkbench() {
         <StepGuide
           steps={config.procedure}
           currentStep={currentStep}
-          onStepClick={setCurrentStep}
+          onStepClick={handleStepChange}
           completedSteps={currentStep - 1}
         />
       );
@@ -514,7 +566,7 @@ export default function LabWorkbench() {
     return null;
   }, [
     config, probeTargets, state.connections, connectedCount,
-    handleConnectAll, handleDisconnectAll, currentStep,
+    handleConnectAll, handleDisconnectAll, currentStep, handleStepChange,
     measurementRows, measurementValues, handleMeasurementChange,
     handleSubmitGrading, t,
   ]);

@@ -185,6 +185,7 @@ export const fmMeasurementRows: MeasurementRow[] = [
   {
     id: 'fm-75k',
     label: 'Δf = 75 kHz',
+    targetId: 'fm-dev-75',
     fields: [
       { fieldId: 'tmin', fieldLabel: 'T min (s)', unit: 's', value: '' },
       { fieldId: 'tmax', fieldLabel: 'T max (s)', unit: 's', value: '' },
@@ -215,6 +216,7 @@ export const fmMeasurementRows: MeasurementRow[] = [
   {
     id: 'fm-25k',
     label: 'Δf = 25 kHz',
+    targetId: 'fm-dev-25',
     fields: [
       { fieldId: 'tmin', fieldLabel: 'T min (s)', unit: 's', value: '' },
       { fieldId: 'tmax', fieldLabel: 'T max (s)', unit: 's', value: '' },

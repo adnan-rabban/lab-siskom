@@ -273,6 +273,7 @@ export const amMeasurementRows: MeasurementRow[] = [
   {
     id: 'meas-50',
     label: 'm ≈ 50%',
+    targetId: 'mod-index-50',
     fields: [
       { fieldId: 'emax', fieldLabel: 'Emax', unit: 'V', value: '' },
       { fieldId: 'emin', fieldLabel: 'Emin', unit: 'V', value: '' },
@@ -295,6 +296,7 @@ export const amMeasurementRows: MeasurementRow[] = [
   {
     id: 'meas-100',
     label: 'm ≈ 100%',
+    targetId: 'mod-index-100',
     fields: [
       { fieldId: 'emax', fieldLabel: 'Emax', unit: 'V', value: '' },
       { fieldId: 'emin', fieldLabel: 'Emin', unit: 'V', value: '' },

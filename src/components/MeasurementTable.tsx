@@ -66,38 +66,81 @@ export default function MeasurementTable({
         <thead>
           <tr>
             <th>{t('Pengukuran', 'Measurement')}</th>
-            {rows[0]?.fields.map(f => (
-              <th key={f.fieldId}>{f.fieldLabel} ({f.unit})</th>
-            ))}
-            {rows[0]?.calculated?.map(c => (
-              <th key={c.fieldId}>{c.fieldLabel} ({c.unit})</th>
-            ))}
+            {/* BUG-05 fix: Build union of all field columns from all rows */}
+            {(() => {
+              const fieldIds = new Map<string, { label: string; unit: string }>();
+              const calcIds = new Map<string, { label: string; unit: string }>();
+              for (const row of rows) {
+                for (const f of row.fields) {
+                  if (!fieldIds.has(f.fieldId)) fieldIds.set(f.fieldId, { label: f.fieldLabel, unit: f.unit });
+                }
+                if (row.calculated) {
+                  for (const c of row.calculated) {
+                    if (!calcIds.has(c.fieldId)) calcIds.set(c.fieldId, { label: c.fieldLabel, unit: c.unit });
+                  }
+                }
+              }
+              return (
+                <>
+                  {[...fieldIds.entries()].map(([id, meta]) => (
+                    <th key={id}>{meta.label} ({meta.unit})</th>
+                  ))}
+                  {[...calcIds.entries()].map(([id, meta]) => (
+                    <th key={id}>{meta.label} ({meta.unit})</th>
+                  ))}
+                </>
+              );
+            })()}
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => (
-            <tr key={row.id}>
-              <td style={{ fontWeight: 'var(--fw-semibold)' as any }}>{row.label}</td>
-              {row.fields.map(field => (
-                <td key={field.fieldId}>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={values[row.id]?.[field.fieldId] ?? ''}
-                    onChange={e => handleInputChange(row.id, field.fieldId, e.target.value)}
-                  />
-                </td>
-              ))}
-              {row.calculated?.map(calc => (
-                <td key={calc.fieldId}>
-                  <span className="measurement-calculated">
-                    {computedValues[row.id]?.[calc.fieldId]?.toFixed(1) ?? '—'}
-                  </span>
-                </td>
-              ))}
-            </tr>
-          ))}
+          {rows.map(row => {
+            // Build union column order for consistent alignment
+            const allFieldIds: string[] = [];
+            const allCalcIds: string[] = [];
+            for (const r of rows) {
+              for (const f of r.fields) {
+                if (!allFieldIds.includes(f.fieldId)) allFieldIds.push(f.fieldId);
+              }
+              if (r.calculated) {
+                for (const c of r.calculated) {
+                  if (!allCalcIds.includes(c.fieldId)) allCalcIds.push(c.fieldId);
+                }
+              }
+            }
+
+            return (
+              <tr key={row.id}>
+                <td style={{ fontWeight: 'var(--fw-semibold)' as any }}>{row.label}</td>
+                {allFieldIds.map(fid => {
+                  const field = row.fields.find(f => f.fieldId === fid);
+                  if (!field) return <td key={fid}>—</td>;
+                  return (
+                    <td key={fid}>
+                      <input
+                        type={field.unit === '' ? 'text' : 'number'}
+                        step="0.01"
+                        placeholder={field.unit === '' ? '...' : '0.00'}
+                        value={values[row.id]?.[field.fieldId] ?? ''}
+                        onChange={e => handleInputChange(row.id, field.fieldId, e.target.value)}
+                      />
+                    </td>
+                  );
+                })}
+                {allCalcIds.map(cid => {
+                  const calc = row.calculated?.find(c => c.fieldId === cid);
+                  if (!calc) return <td key={cid}>—</td>;
+                  return (
+                    <td key={cid}>
+                      <span className="measurement-calculated">
+                        {computedValues[row.id]?.[calc.fieldId]?.toFixed(1) ?? '—'}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 

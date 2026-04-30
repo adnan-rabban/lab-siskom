@@ -200,6 +200,8 @@ export interface OscilloscopeState {
 export interface MeasurementRow {
   id: string;
   label: string;
+  /** Explicit link to an ObservationTarget id for grading */
+  targetId?: string;
   fields: {
     fieldId: string;
     fieldLabel: string;

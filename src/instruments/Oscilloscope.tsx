@@ -118,6 +118,13 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
   const [cursorPos, setCursorPos] = useState({ t1: 0.25, t2: 0.75, v1: 0.25, v2: 0.75 });
   const [draggingCursor, setDraggingCursor] = useState<keyof typeof cursorPos | null>(null);
 
+  // BUG-01 fix: Auto-select first probe target for CH1 when available
+  useEffect(() => {
+    if (probeTargets.length > 0 && ch1.probeTarget === null) {
+      setCh1(prev => ({ ...prev, probeTarget: probeTargets[0].nodeId }));
+    }
+  }, [probeTargets]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const timePerDiv = TIME_DIV_STEPS[timeDivIndex].value;
   const totalTime = timePerDiv * GRID_DIVS_X; // total time window
 
@@ -212,6 +219,22 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     ) => {
       if (!channel.enabled || !channel.probeTarget) return;
 
+      // BUG-02 fix: GND coupling — show flat line
+      if (channel.coupling === 'GND') {
+        const voltsPerDiv = VOLTS_DIV_STEPS[channel.voltsDivIndex].value;
+        const pixelsPerDiv = ch_h / GRID_DIVS_Y;
+        const centerY = ch_h / 2 - channel.verticalOffset * pixelsPerDiv;
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(cw, centerY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        return;
+      }
+
       // Find the target node to get its frequency for cycle calculation
       const targetNode = state.nodes.get(channel.probeTarget);
       if (!targetNode) return;
@@ -221,7 +244,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
       const cyclesToShow = totalTime * signalFreq;
 
       // Generate signal data
-      const signal = processSignalGraph(
+      let signal = processSignalGraph(
         state.nodes,
         state.connections,
         channel.probeTarget,
@@ -231,6 +254,16 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
       );
 
       if (!signal) return;
+
+      // BUG-02 fix: AC coupling — remove DC offset (high-pass filter)
+      if (channel.coupling === 'AC') {
+        let dcOffset = 0;
+        for (let i = 0; i < signal.length; i++) dcOffset += signal[i];
+        dcOffset /= signal.length;
+        const acSignal = new Float32Array(signal.length);
+        for (let i = 0; i < signal.length; i++) acSignal[i] = signal[i] - dcOffset;
+        signal = acSignal;
+      }
 
       const voltsPerDiv = VOLTS_DIV_STEPS[channel.voltsDivIndex].value;
       const pixelsPerDiv = ch_h / GRID_DIVS_Y;
@@ -433,7 +466,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
           onTouchEnd={() => setDraggingCursor(null)}
           style={{ cursor: draggingCursor ? (cursorMode === 'time' ? 'ew-resize' : 'ns-resize') : 'default' }}
         >
-          <canvas ref={canvasRef} className="oscilloscope-canvas" />
+          <canvas ref={canvasRef} id="oscilloscope-canvas" className="oscilloscope-canvas" />
           
           {/* Measurement Readout Overlay */}
           {cursorMode !== 'off' && (
@@ -477,6 +510,16 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
               size="sm"
               onChange={handleCh1VoltsChange}
               formatValue={(v) => VOLTS_DIV_STEPS[Math.round(v)]?.label || ''}
+            />
+            <Knob
+              label="POS"
+              value={ch1.verticalOffset}
+              min={-4}
+              max={4}
+              step={0.1}
+              size="sm"
+              onChange={(v) => setCh1(prev => ({ ...prev, verticalOffset: v }))}
+              formatValue={(v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
             />
             <div className="coupling-selector">
               {(['AC', 'DC', 'GND'] as CouplingMode[]).map(mode => (
@@ -522,6 +565,16 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
               size="sm"
               onChange={handleCh2VoltsChange}
               formatValue={(v) => VOLTS_DIV_STEPS[Math.round(v)]?.label || ''}
+            />
+            <Knob
+              label="POS"
+              value={ch2.verticalOffset}
+              min={-4}
+              max={4}
+              step={0.1}
+              size="sm"
+              onChange={(v) => setCh2(prev => ({ ...prev, verticalOffset: v }))}
+              formatValue={(v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
             />
             <div className="coupling-selector">
               {(['AC', 'DC', 'GND'] as CouplingMode[]).map(mode => (

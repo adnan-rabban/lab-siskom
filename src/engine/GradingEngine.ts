@@ -93,11 +93,15 @@ export function evaluateMeasurements(
         const pointsPerCalc = 15;
         maxScore += pointsPerCalc;
 
-        // Find matching target
+        // BUG-06 fix: Use explicit targetId mapping, fallback to heuristic
         const target = targets.find(t => {
-          // Match by row label heuristic
+          // Prefer explicit targetId on the row
+          if (row.targetId && t.id === row.targetId) return true;
+          // Fallback heuristic for backwards compatibility
           if (row.id.includes('50') && t.id.includes('50')) return true;
           if (row.id.includes('100') && t.id.includes('100')) return true;
+          if (row.id.includes('75') && t.id.includes('75')) return true;
+          if (row.id.includes('25') && t.id.includes('25')) return true;
           return false;
         });
 

@@ -48,6 +48,19 @@ export default function FunctionGenerator({ nodeId, instanceLabel }: FunctionGen
 
   const [enabled, setEnabled] = useState(true);
 
+  // FEAT-03: Wire enabled toggle to signal engine
+  const handleEnabledToggle = useCallback(
+    (on: boolean) => {
+      setEnabled(on);
+      dispatch({
+        type: 'UPDATE_NODE_PARAMS',
+        nodeId,
+        params: { enabled: on },
+      });
+    },
+    [dispatch, nodeId]
+  );
+
   const handleFreqChange = useCallback(
     (value: number) => {
       dispatch({
@@ -95,7 +108,7 @@ export default function FunctionGenerator({ nodeId, instanceLabel }: FunctionGen
         </span>
         <ToggleSwitch
           active={enabled}
-          onChange={setEnabled}
+          onChange={handleEnabledToggle}
         />
       </div>
 
