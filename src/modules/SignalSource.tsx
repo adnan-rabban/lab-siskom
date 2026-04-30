@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
+import { usePortConnected } from '../hooks/usePortConnected';
 import Knob from '../components/Knob';
 import LED from '../components/LED';
 import Terminal from '../components/Terminal';
@@ -16,6 +17,7 @@ function formatFrequency(hz: number): string {
 
 export default function SignalSource({ nodeId }: SignalSourceProps) {
   const { state, dispatch, t } = useSignalGraph();
+  const isConnected = usePortConnected(nodeId);
   const node = state.nodes.get(nodeId);
   const isOn = state.powerOn;
 
@@ -85,8 +87,8 @@ export default function SignalSource({ nodeId }: SignalSourceProps) {
           </span>
         </div>
         <div className="module-terminals">
-          <Terminal id={`${nodeId}-output`} label="OUT" direction="output" connected={false} />
-          <Terminal id={`${nodeId}-mod-in`} label="MOD IN" direction="input" connected={false} />
+          <Terminal id={`${nodeId}-output`} label="OUT" direction="output" connected={isConnected('output')} />
+          <Terminal id={`${nodeId}-mod-in`} label="MOD IN" direction="input" connected={isConnected('mod-in')} />
         </div>
       </div>
     </div>

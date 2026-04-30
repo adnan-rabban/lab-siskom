@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
+import { usePortConnected } from '../hooks/usePortConnected';
 import Knob from '../components/Knob';
 import Terminal from '../components/Terminal';
 
@@ -9,6 +10,7 @@ interface AmplifierProps {
 
 export default function Amplifier({ nodeId }: AmplifierProps) {
   const { state, dispatch, t } = useSignalGraph();
+  const isConnected = usePortConnected(nodeId);
   const node = state.nodes.get(nodeId);
   const isOn = state.powerOn;
 
@@ -46,8 +48,8 @@ export default function Amplifier({ nodeId }: AmplifierProps) {
           />
         </div>
         <div className="module-terminals">
-          <Terminal id={`${nodeId}-input`} label="IN" direction="input" connected={false} />
-          <Terminal id={`${nodeId}-output`} label="OUT" direction="output" connected={false} />
+          <Terminal id={`${nodeId}-input`} label="IN" direction="input" connected={isConnected('input')} />
+          <Terminal id={`${nodeId}-output`} label="OUT" direction="output" connected={isConnected('output')} />
         </div>
       </div>
     </div>
