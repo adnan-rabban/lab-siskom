@@ -73,33 +73,51 @@ interface WidgetMeta {
 // ============================================================
 function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
   const layout: WidgetMeta[] = [];
-  let mx = 40;
 
-  // Modules row
+  // ── Row Y anchors ────────────────────────────────────────
+  // MODULE_Y and INST_Y are fixed; PANEL_Y and MEAS_Y are computed
+  // dynamically AFTER all side instruments are placed, so the panel
+  // row always lands below the tallest instrument column regardless
+  // of how many side instruments a practicum has.
+  const MODULE_Y = 40;
+  const INST_Y   = 520;
+
+  // ── Module dimensions ────────────────────────────────────
+  const MOD_W   = 215;
+  const MOD_GAP = 20;
+
+  let mx = 40;
   for (const mod of config.requiredModules) {
     layout.push({
       id: `module-${mod.nodeId}`,
       label: mod.label,
       category: 'module',
       icon: moduleIcon(mod.moduleType),
-      defaultPos: { x: mx, y: 80 },
-      width: 220,
+      defaultPos: { x: mx, y: MODULE_Y },
+      width: MOD_W,
     });
-    mx += 240;
+    mx += MOD_W + MOD_GAP;
   }
 
-  // Instruments row
-  const instY = 380;
-  let ix = 40;
+  // ── Instruments ──────────────────────────────────────────
+  // Oscilloscope occupies the left column; smaller instruments
+  // stack in the right column so they never overlap each other.
+  const OSC_W      = 640;
+  const SIDE_INST_W = 275;
+  const SIDE_INST_X = 40 + OSC_W + 20; // 700
+
   layout.push({
     id: 'instrument-oscilloscope',
     label: 'Oscilloscope',
     category: 'instrument',
     icon: <Monitor size={14} />,
-    defaultPos: { x: ix, y: instY },
-    width: 680,
+    defaultPos: { x: 40, y: INST_Y },
+    width: OSC_W,
   });
-  ix += 710;
+
+  // Side instruments (freq-counter / function-generator) stack vertically
+  let sideY = INST_Y;
+  const SIDE_INST_GAP = 20; // gap between stacked side instruments
 
   for (const inst of config.requiredInstruments) {
     if (inst.moduleType === 'frequency-counter') {
@@ -108,29 +126,62 @@ function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
         label: inst.label,
         category: 'instrument',
         icon: <Hash size={14} />,
-        defaultPos: { x: ix, y: instY },
-        width: 300,
+        defaultPos: { x: SIDE_INST_X, y: sideY },
+        width: SIDE_INST_W,
       });
-      ix += 330;
+      sideY += 300 + SIDE_INST_GAP; // freq-counter est. height 300px
     } else if (inst.moduleType === 'function-generator') {
       layout.push({
         id: `instrument-fgen-${inst.nodeId}`,
         label: inst.label,
         category: 'instrument',
         icon: <Waves size={14} />,
-        defaultPos: { x: ix, y: instY },
-        width: 300,
+        defaultPos: { x: SIDE_INST_X, y: sideY },
+        width: SIDE_INST_W,
       });
-      ix += 330;
+      sideY += 340 + SIDE_INST_GAP; // func-gen est. height 340px
     }
   }
 
-  // Panels row
-  const panelY = 780;
+  // ── Panels ───────────────────────────────────────────────
+  // Compute PANEL_Y dynamically: it must sit below BOTH the oscilloscope
+  // (INST_Y + ~600 px estimated height) AND the last side instrument (sideY).
+  // This prevents panels from ever visually overlapping instruments.
+  const OSC_EST_HEIGHT  = 600; // generous estimate for oscilloscope widget height
+  const PANEL_GAP       = 60;
+  const PANEL_Y = Math.max(INST_Y + OSC_EST_HEIGHT, sideY) + PANEL_GAP;
+
+  // MEAS_Y: connection panel + procedure panels are at most ~560 px tall
+  const PANEL_EST_HEIGHT = 560;
+  const MEAS_Y = PANEL_Y + PANEL_EST_HEIGHT;
+
+  // Connection panel and Lab Procedure sit side-by-side in one row.
+  // Measurement Table spans the full width below them.
   layout.push(
-    { id: 'panel-connections', label: 'Connection Panel', category: 'panel', icon: <Cable size={14} />, defaultPos: { x: 40, y: panelY }, width: 520 },
-    { id: 'panel-procedure', label: 'Lab Procedure', category: 'panel', icon: <ClipboardList size={14} />, defaultPos: { x: 580, y: panelY }, width: 400 },
-    { id: 'panel-measurements', label: 'Measurement Table', category: 'panel', icon: <BarChart3 size={14} />, defaultPos: { x: 40, y: 1160 }, width: 940 },
+    {
+      id: 'panel-connections',
+      label: 'Connection Panel',
+      category: 'panel',
+      icon: <Cable size={14} />,
+      defaultPos: { x: 40, y: PANEL_Y },
+      width: 500,
+    },
+    {
+      id: 'panel-procedure',
+      label: 'Lab Procedure',
+      category: 'panel',
+      icon: <ClipboardList size={14} />,
+      defaultPos: { x: 560, y: PANEL_Y },
+      width: 440,
+    },
+    {
+      id: 'panel-measurements',
+      label: 'Measurement Table',
+      category: 'panel',
+      icon: <BarChart3 size={14} />,
+      defaultPos: { x: 40, y: MEAS_Y },
+      width: 960,
+    },
   );
 
   return layout;
@@ -168,8 +219,12 @@ function renderModule(moduleType: string, nodeId: string) {
 // ============================================================
 // Persistence helpers for canvas layout
 // ============================================================
+// ── Canvas layout version: bump this whenever the default layout changes
+//    so cached positions from older versions are automatically discarded. ─
+const CANVAS_LAYOUT_VERSION = 'v3'; // bumped: PANEL_Y now computed dynamically
+
 function canvasStorageKey(practicumId: string) {
-  return `lab-canvas-layout-${practicumId}`;
+  return `lab-canvas-layout-${practicumId}-${CANVAS_LAYOUT_VERSION}`;
 }
 function saveCanvasLayout(
   practicumId: string,
@@ -209,8 +264,8 @@ export default function LabWorkbench() {
   const [initialized, setInitialized] = useState(false);
 
   // ── Canvas State ──────────────────────────────────────────
-  const [pan, setPan] = useState({ x: 80, y: 40 });
-  const [zoom, setZoom] = useState(0.85);
+  const [pan, setPan] = useState({ x: 40, y: 20 });
+  const [zoom, setZoom] = useState(0.72);
   const [widgetPositions, setWidgetPositions] = useState<Record<string, WidgetPosition>>({});
   const [hiddenWidgets, setHiddenWidgets] = useState<Set<string>>(new Set());
   const [minimizedWidgets, setMinimizedWidgets] = useState<Set<string>>(new Set());
@@ -396,7 +451,9 @@ export default function LabWorkbench() {
       return;
     }
     // Left click on empty canvas area: pan
-    if ((e.target as HTMLElement).closest('.canvas-widget')) return;
+    // Skip panning when clicking on interactive overlays (widgets, nav bar, HUD)
+    const target = e.target as HTMLElement;
+    if (target.closest('.canvas-widget') || target.closest('.canvas-nav-bar') || target.closest('.canvas-shortcut-hud')) return;
     if (e.button !== 0) return;
     panRef.current = { isPanning: true, startX: e.clientX, startY: e.clientY, startPanX: pan.x, startPanY: pan.y };
     setIsPanning(true);
@@ -530,7 +587,7 @@ export default function LabWorkbench() {
           break;
         case '0':
           setZoom(1);
-          setPan({ x: 80, y: 40 });
+          setPan({ x: 40, y: 20 });
           e.preventDefault();
           break;
         case 'f': case 'F':
@@ -554,8 +611,8 @@ export default function LabWorkbench() {
           e.preventDefault();
           break;
         case 'Home':
-          setPan({ x: 80, y: 40 });
-          setZoom(0.85);
+          setPan({ x: 40, y: 20 });
+          setZoom(0.72);
           e.preventDefault();
           break;
       }
@@ -850,7 +907,7 @@ export default function LabWorkbench() {
                       <button className="canvas-zoom-btn" onClick={() => setZoom(z => Math.max(z / 1.2, 0.2))}>−</button>
                     </div>
                     <div className="canvas-view-btns">
-                      <button className="canvas-view-btn" onClick={() => { setZoom(1); setPan({ x: 80, y: 40 }); }}>100%</button>
+                      <button className="canvas-view-btn" onClick={() => { setZoom(1); setPan({ x: 40, y: 20 }); }}>100%</button>
                       <button className="canvas-view-btn" onClick={handleFitToScreen}>
                         {t('Sesuaikan Layar', 'Fit Screen')}
                       </button>
@@ -986,22 +1043,6 @@ export default function LabWorkbench() {
             </div>
           )}
 
-          {/* ── Bottom Navigation Bar ── */}
-          <div className="canvas-nav-bar">
-            <button className="canvas-nav-btn" title="Zoom Out (−)" onClick={() => setZoom(z => Math.max(z / 1.2, 0.2))}>−</button>
-            <span
-              className="canvas-nav-zoom-label"
-              title="Click to reset zoom to 100%"
-              onClick={() => { setZoom(1); setPan({ x: 80, y: 40 }); }}
-            >
-              {Math.round(zoom * 100)}%
-            </span>
-            <button className="canvas-nav-btn" title="Zoom In (+)" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
-            <div style={{ width: 1, height: 16, background: 'var(--border-medium)', margin: '0 2px' }} />
-            <button className="canvas-nav-btn" title={t('Sesuaikan Layar (F)', 'Fit Screen (F)')} onClick={handleFitToScreen}><Maximize size={12} /></button>
-            <button className="canvas-nav-btn" title={t('Reset Tampilan (Home)', 'Reset View (Home)')} onClick={() => { setZoom(0.85); setPan({ x: 80, y: 40 }); }}><Home size={12} /></button>
-          </div>
-
           {/* ── Shortcut HUD ── */}
           <div className="canvas-shortcut-hud">
             <div className="canvas-shortcut-hud-title"><Keyboard size={12} /> {t('Pintasan', 'Shortcuts')}</div>
@@ -1023,6 +1064,23 @@ export default function LabWorkbench() {
               </div>
             ))}
           </div>
+        </div>
+
+      {/* ── Bottom Navigation Bar (at root level, outside canvas-layout to avoid pointer event capture) ── */}
+        <div className="canvas-nav-bar">
+          <button id="nav-zoom-out" className="canvas-nav-btn" title="Zoom Out (−)" onClick={() => setZoom(z => Math.max(z / 1.2, 0.2))}>−</button>
+          <span
+            id="nav-zoom-label"
+            className="canvas-nav-zoom-label"
+            title="Click to reset zoom to 100%"
+            onClick={() => { setZoom(1); setPan({ x: 40, y: 20 }); }}
+          >
+            {Math.round(zoom * 100)}%
+          </span>
+          <button id="nav-zoom-in" className="canvas-nav-btn" title="Zoom In (+)" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
+          <div style={{ width: 1, height: 16, background: 'var(--border-medium)', margin: '0 2px' }} />
+          <button id="nav-fit-screen" className="canvas-nav-btn" title={t('Sesuaikan Layar (F)', 'Fit Screen (F)')} onClick={handleFitToScreen}><Maximize size={12} /></button>
+          <button id="nav-reset-view" className="canvas-nav-btn" title={t('Reset Tampilan (Home)', 'Reset View (Home)')} onClick={() => { setZoom(0.72); setPan({ x: 40, y: 20 }); }}><Home size={12} /></button>
         </div>
       </div>
 

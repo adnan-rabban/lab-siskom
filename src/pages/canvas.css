@@ -591,7 +591,7 @@
 
 /* ── Minimap / zoom indicator pill ── */
 .canvas-nav-bar {
-  position: absolute;
+  position: fixed;
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
@@ -601,18 +601,18 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-full);
-  padding: 4px 8px;
-  z-index: 40;
+  padding: 6px 10px;
+  z-index: 100;
   pointer-events: auto;
 }
 .canvas-nav-btn {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
