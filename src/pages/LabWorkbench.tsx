@@ -206,10 +206,13 @@ export default function LabWorkbench() {
   const [minimizedWidgets, setMinimizedWidgets] = useState<Set<string>>(new Set());
   const [toolbarOpen, setToolbarOpen] = useState(true);
   const [toolbarTab, setToolbarTab] = useState<'tools' | 'view'>('tools');
+  const [isSpacePanning, setIsSpacePanning] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const panRef = useRef({ isPanning: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
   const dragRef = useRef<{ widgetId: string; startX: number; startY: number; startWX: number; startWY: number } | null>(null);
+  const isSpacePressedRef = useRef(false);
 
   const entry = practicumId ? practicumRegistry[practicumId] : null;
   const config = entry?.config ?? null;
@@ -289,7 +292,7 @@ export default function LabWorkbench() {
 
   useWorkbenchPersistence(
     practicumId || '', state.powerOn, state.connections,
-    state.nodes as any, currentStep, measurementValues,
+    state.nodes as Map<string, SignalNode>, currentStep, measurementValues,
   );
 
   // FEAT-01 & FEAT-02: Auto-apply paramChanges & requiredConnections when step changes
@@ -367,9 +370,26 @@ export default function LabWorkbench() {
 
   // ── Canvas Mouse Handlers ─────────────────────────────────
   const handleCanvasPointerDown = useCallback((e: React.PointerEvent) => {
+    // Middle mouse button (button=1): always pan, even over widgets
+    if (e.button === 1) {
+      e.preventDefault();
+      panRef.current = { isPanning: true, startX: e.clientX, startY: e.clientY, startPanX: pan.x, startPanY: pan.y };
+      setIsPanning(true);
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      return;
+    }
+    // Space + left-click: pan even over widgets
+    if (isSpacePressedRef.current && e.button === 0) {
+      panRef.current = { isPanning: true, startX: e.clientX, startY: e.clientY, startPanX: pan.x, startPanY: pan.y };
+      setIsPanning(true);
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      return;
+    }
+    // Left click on empty canvas area: pan
     if ((e.target as HTMLElement).closest('.canvas-widget')) return;
     if (e.button !== 0) return;
     panRef.current = { isPanning: true, startX: e.clientX, startY: e.clientY, startPanX: pan.x, startPanY: pan.y };
+    setIsPanning(true);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [pan]);
 
@@ -382,42 +402,60 @@ export default function LabWorkbench() {
     if (dragRef.current) {
       const dx = (e.clientX - dragRef.current.startX) / zoom;
       const dy = (e.clientY - dragRef.current.startY) / zoom;
+      // No Math.max(0,...) — widgets can be anywhere on the infinite canvas
       setWidgetPos(dragRef.current.widgetId, {
-        x: Math.max(0, dragRef.current.startWX + dx),
-        y: Math.max(0, dragRef.current.startWY + dy),
+        x: dragRef.current.startWX + dx,
+        y: dragRef.current.startWY + dy,
       });
     }
   }, [zoom, setWidgetPos]);
 
   const handleCanvasPointerUp = useCallback(() => {
     panRef.current.isPanning = false;
+    setIsPanning(false);
     dragRef.current = null;
   }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    // BUG-08 fix: Don't zoom when scrolling inside widgets
-    const target = e.target as HTMLElement;
-    if (target.closest('.canvas-widget-body') || target.closest('.canvas-widget')) {
-      // Check if the widget content is scrollable
-      const widgetBody = target.closest('.canvas-widget-body') as HTMLElement;
-      if (widgetBody && widgetBody.scrollHeight > widgetBody.clientHeight) {
-        return; // Let native scroll work inside scrollable widget
-      }
+  // Native wheel handler — must use { passive: false } so preventDefault() works
+  // React's onWheel is passive by default, which lets Ctrl+Scroll trigger browser zoom
+  const handleWheel = useCallback((e: WheelEvent) => {
+    // ── Ctrl / Meta + Scroll → Zoom (always, even inside widgets) ──
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const rect = canvasRef.current!.getBoundingClientRect();
+      const cursorX = e.clientX - rect.left;
+      const cursorY = e.clientY - rect.top;
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      setZoom(prev => {
+        const newZoom = Math.min(Math.max(prev * factor, 0.2), 2.5);
+        const wx = (cursorX - pan.x) / prev;
+        const wy = (cursorY - pan.y) / prev;
+        setPan({ x: cursorX - wx * newZoom, y: cursorY - wy * newZoom });
+        return newZoom;
+      });
+      return;
     }
 
+    // ── Plain scroll over a widget → let the widget's own scroll work ──
+    const target = e.target as HTMLElement;
+    if (target.closest('.canvas-widget-body')) return;
+
+    // ── Plain scroll on canvas → pan ──
     e.preventDefault();
-    const rect = canvasRef.current!.getBoundingClientRect();
-    const cursorX = e.clientX - rect.left;
-    const cursorY = e.clientY - rect.top;
-    const factor = e.deltaY < 0 ? 1.1 : 0.9;
-    setZoom(prev => {
-      const newZoom = Math.min(Math.max(prev * factor, 0.2), 2.5);
-      const wx = (cursorX - pan.x) / prev;
-      const wy = (cursorY - pan.y) / prev;
-      setPan({ x: cursorX - wx * newZoom, y: cursorY - wy * newZoom });
-      return newZoom;
-    });
+    if (e.shiftKey) {
+      setPan(prev => ({ ...prev, x: prev.x - e.deltaY * 0.8 }));
+    } else {
+      setPan(prev => ({ x: prev.x - e.deltaX * 0.8, y: prev.y - e.deltaY * 0.8 }));
+    }
   }, [pan]);
+
+  // Attach wheel listener with { passive: false } so preventDefault() actually fires
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
   // ── Widget Drag Start ─────────────────────────────────────
   const startWidgetDrag = useCallback((e: React.PointerEvent, id: string, meta: WidgetMeta) => {
@@ -453,6 +491,82 @@ export default function LabWorkbench() {
       y: (rect.height / 2) - ((minY + maxY) / 2) * newZoom,
     });
   }, [widgetMetas, hiddenWidgets, widgetPositions]);
+
+  // ── Keyboard Shortcuts & Space-Pan ───────────────────────
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable;
+
+      if (e.code === 'Space' && !inInput) {
+        if (!isSpacePressedRef.current) {
+          isSpacePressedRef.current = true;
+          setIsSpacePanning(true);
+        }
+        e.preventDefault();
+        return;
+      }
+
+      if (inInput) return;
+
+      switch (e.key) {
+        case '+': case '=':
+          setZoom(z => Math.min(z * 1.15, 2.5));
+          e.preventDefault();
+          break;
+        case '-':
+          setZoom(z => Math.max(z / 1.15, 0.2));
+          e.preventDefault();
+          break;
+        case '0':
+          setZoom(1);
+          setPan({ x: 80, y: 40 });
+          e.preventDefault();
+          break;
+        case 'f': case 'F':
+          handleFitToScreen();
+          e.preventDefault();
+          break;
+        case 'ArrowLeft':
+          setPan(prev => ({ ...prev, x: prev.x + 60 }));
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          setPan(prev => ({ ...prev, x: prev.x - 60 }));
+          e.preventDefault();
+          break;
+        case 'ArrowUp':
+          setPan(prev => ({ ...prev, y: prev.y + 60 }));
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          setPan(prev => ({ ...prev, y: prev.y - 60 }));
+          e.preventDefault();
+          break;
+        case 'Home':
+          setPan({ x: 80, y: 40 });
+          setZoom(0.85);
+          e.preventDefault();
+          break;
+      }
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        isSpacePressedRef.current = false;
+        setIsSpacePanning(false);
+        panRef.current.isPanning = false;
+        setIsPanning(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [handleFitToScreen]);
 
   const handleResetLayout = useCallback(() => {
     if (!practicumId) return;
@@ -517,7 +631,6 @@ export default function LabWorkbench() {
     }
 
     if (meta.id.startsWith('instrument-freq-')) {
-      const nodeId = meta.id.replace('instrument-freq-', '');
       return <FrequencyCounter probeTargets={probeTargets.map(p => ({ nodeId: p.nodeId, label: p.label }))} />;
     }
 
@@ -743,10 +856,16 @@ export default function LabWorkbench() {
                   <div className="canvas-tool-group">
                     <div className="canvas-tool-group-label">💡 {t('Tips', 'Tips')}</div>
                     <div className="canvas-tips">
-                      <p>🖱️ {t('Drag area kosong untuk pan', 'Drag empty area to pan')}</p>
-                      <p>🖱️ {t('Scroll untuk zoom', 'Scroll to zoom')}</p>
+                      <p>🖱️ <b>Ctrl+Scroll</b> — {t('Zoom in/out', 'Zoom in/out')}</p>
+                      <p>🖱️ <b>Scroll</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p>🖱️ <b>Shift+Scroll</b> — {t('Geser horizontal', 'Pan horizontal')}</p>
+                      <p>🖱️ <b>{t('Klik tengah', 'Middle click')}</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p>⌨️ <b>Space+Drag</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p>⌨️ <b>F</b> — {t('Sesuaikan layar', 'Fit screen')}</p>
+                      <p>⌨️ <b>0</b> — {t('Reset zoom 100%', 'Reset zoom 100%')}</p>
+                      <p>⌨️ <b>+/−</b> — {t('Zoom in/out', 'Zoom in/out')}</p>
+                      <p>⌨️ <b>← → ↑ ↓</b> — {t('Geser kanvas', 'Pan canvas')}</p>
                       <p>⠿ {t('Drag header widget untuk pindah', 'Drag widget header to move')}</p>
-                      <p>_ {t('Minimize widget dengan tombol −', 'Minimize widget with − button')}</p>
                     </div>
                   </div>
                 </div>
@@ -757,24 +876,26 @@ export default function LabWorkbench() {
 
         {/* Infinite Canvas Viewport */}
         <div
-          className="canvas-viewport"
+          className={`canvas-viewport${isSpacePanning ? ' space-panning' : ''}`}
           ref={canvasRef}
           onPointerDown={handleCanvasPointerDown}
           onPointerMove={handleCanvasPointerMove}
           onPointerUp={handleCanvasPointerUp}
           onPointerLeave={handleCanvasPointerUp}
-          onWheel={handleWheel}
-          style={{ cursor: panRef.current.isPanning ? 'grabbing' : 'default' }}
+
+          style={{ cursor: isPanning ? 'grabbing' : isSpacePanning ? 'grab' : 'default' }}
         >
-          {/* Grid background */}
+          {/* Grid background — positive-modulo ensures correct tiling at negative pan values */}
           <svg className="canvas-grid" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
             <defs>
               <pattern id="smallGrid" width={20 * zoom} height={20 * zoom} patternUnits="userSpaceOnUse"
-                x={pan.x % (20 * zoom)} y={pan.y % (20 * zoom)}>
+                x={((pan.x % (20 * zoom)) + 20 * zoom) % (20 * zoom)}
+                y={((pan.y % (20 * zoom)) + 20 * zoom) % (20 * zoom)}>
                 <path d={`M ${20 * zoom} 0 L 0 0 0 ${20 * zoom}`} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
               </pattern>
               <pattern id="bigGrid" width={100 * zoom} height={100 * zoom} patternUnits="userSpaceOnUse"
-                x={pan.x % (100 * zoom)} y={pan.y % (100 * zoom)}>
+                x={((pan.x % (100 * zoom)) + 100 * zoom) % (100 * zoom)}
+                y={((pan.y % (100 * zoom)) + 100 * zoom) % (100 * zoom)}>
                 <rect width={100 * zoom} height={100 * zoom} fill="url(#smallGrid)" />
                 <path d={`M ${100 * zoom} 0 L 0 0 0 ${100 * zoom}`} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
               </pattern>
@@ -852,6 +973,44 @@ export default function LabWorkbench() {
               </p>
             </div>
           )}
+
+          {/* ── Bottom Navigation Bar ── */}
+          <div className="canvas-nav-bar">
+            <button className="canvas-nav-btn" title="Zoom Out (−)" onClick={() => setZoom(z => Math.max(z / 1.2, 0.2))}>−</button>
+            <span
+              className="canvas-nav-zoom-label"
+              title="Click to reset zoom to 100%"
+              onClick={() => { setZoom(1); setPan({ x: 80, y: 40 }); }}
+            >
+              {Math.round(zoom * 100)}%
+            </span>
+            <button className="canvas-nav-btn" title="Zoom In (+)" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
+            <div style={{ width: 1, height: 16, background: 'var(--border-medium)', margin: '0 2px' }} />
+            <button className="canvas-nav-btn" title={t('Sesuaikan Layar (F)', 'Fit Screen (F)')} onClick={handleFitToScreen} style={{ fontSize: 12 }}>⊡</button>
+            <button className="canvas-nav-btn" title={t('Reset Tampilan (Home)', 'Reset View (Home)')} onClick={() => { setZoom(0.85); setPan({ x: 80, y: 40 }); }} style={{ fontSize: 11 }}>⌂</button>
+          </div>
+
+          {/* ── Shortcut HUD ── */}
+          <div className="canvas-shortcut-hud">
+            <div className="canvas-shortcut-hud-title">⌨ {t('Pintasan', 'Shortcuts')}</div>
+            {[
+              ['Ctrl + Scroll', t('Zoom in/out', 'Zoom in/out')],
+              ['Scroll', t('Geser canvas', 'Pan canvas')],
+              ['Shift + Scroll', t('Geser horizontal', 'Pan horizontal')],
+              ['Middle Mouse', t('Geser canvas', 'Pan canvas')],
+              ['Space + Drag', t('Geser canvas', 'Pan canvas')],
+              ['+  /  −', t('Zoom in/out', 'Zoom in/out')],
+              ['F', t('Sesuaikan layar', 'Fit to screen')],
+              ['0', t('Reset zoom 100%', 'Reset zoom 100%')],
+              ['Home', t('Kembali ke asal', 'Return to origin')],
+              ['← → ↑ ↓', t('Geser canvas', 'Pan canvas')],
+            ].map(([key, desc]) => (
+              <div key={key} className="canvas-shortcut-row">
+                <span className="canvas-shortcut-key">{key}</span>
+                <span className="canvas-shortcut-desc">{desc}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

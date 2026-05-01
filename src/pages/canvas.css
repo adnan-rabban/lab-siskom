@@ -317,9 +317,14 @@
   border-top: 2px solid var(--accent-primary);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
+  overflow: visible; /* Allow content to size naturally — no clipping */
   transition: box-shadow var(--duration-fast);
   min-width: 180px;
+}
+/* Re-apply clip only to header so its rounded corners stay crisp */
+.canvas-widget > .canvas-widget-header {
+  border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
+  overflow: hidden;
 }
 .canvas-widget:hover {
   border-color: var(--border-strong);
@@ -425,19 +430,22 @@
   color: var(--accent-red);
 }
 
-/* Widget Body */
+/* Widget Body — no max-height, no internal scrollbars on infinite canvas */
 .canvas-widget-body {
-  padding: var(--sp-3);
-  overflow: auto;
-  max-height: calc(100vh - 160px);
+  padding: var(--sp-2);
+  overflow: visible;
 }
 
 /* Minimized state visual cue */
 .canvas-widget.minimized {
   border-color: rgba(255, 92, 0, 0.2);
 }
+.canvas-widget.minimized .canvas-widget-body {
+  display: none; /* explicitly hide to collapse height */
+}
 .canvas-widget.minimized .canvas-widget-header {
-  background: linear-gradient(90deg, var(--bg-module), rgba(255, 92, 0, 0.04));
+  border-radius: calc(var(--radius-md) - 1px);
+  border-bottom: none;
 }
 
 /* ── Empty canvas hint ── */
@@ -469,6 +477,28 @@
   margin: 0;
 }
 
+/* Module panels inside canvas widget: flush fit, no double border */
+.canvas-widget-body > .module-panel,
+.canvas-widget-body .power-supply-module,
+.canvas-widget-body .signal-source-module,
+.canvas-widget-body .amplifier-module,
+.canvas-widget-body .tuned-circuit-module,
+.canvas-widget-body .waveform-synthesis-module,
+.canvas-widget-body .detector-module,
+.canvas-widget-body .fm-modulator-module {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  background: transparent;
+}
+
+/* Instruments fill their widget body */
+.canvas-widget-body .function-generator,
+.canvas-widget-body .frequency-counter {
+  margin: 0;
+}
+
 /* ── Canvas grid background ── */
 .canvas-grid {
   opacity: 1;
@@ -485,7 +515,112 @@
   .canvas-sidebar.open {
     width: 180px;
   }
-  .canvas-widget-body {
-    max-height: 60vh;
-  }
+}
+
+/* ── Space-pan cursor override ── */
+.canvas-viewport.space-panning {
+  cursor: grab !important;
+}
+.canvas-viewport.space-panning:active {
+  cursor: grabbing !important;
+}
+
+/* ── Keyboard shortcut HUD ── */
+.canvas-shortcut-hud {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.85;
+  min-width: 220px;
+}
+.canvas-shortcut-hud-title {
+  font-size: 9px;
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+.canvas-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.canvas-shortcut-key {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  background: var(--bg-module);
+  border: 1px solid var(--border-medium);
+  border-radius: 3px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.canvas-shortcut-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ── Minimap / zoom indicator pill ── */
+.canvas-nav-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  padding: 4px 8px;
+  z-index: 40;
+  pointer-events: auto;
+}
+.canvas-nav-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast);
+}
+.canvas-nav-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+.canvas-nav-zoom-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: center;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast);
+}
+.canvas-nav-zoom-label:hover {
+  background: var(--surface-1);
+  color: var(--text-primary);
 }
