@@ -762,6 +762,7 @@ export default function LabWorkbench() {
             {toolbarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
           </button>
 
+          <div className="canvas-sidebar-inner">
           {toolbarOpen && (
             <>
               <div className="canvas-sidebar-tabs">
@@ -882,6 +883,7 @@ export default function LabWorkbench() {
               )}
             </>
           )}
+          </div>
         </aside>
 
         {/* Infinite Canvas Viewport */}

@@ -42,7 +42,7 @@ export const demodulationConfig: PracticumConfig = {
     {
       moduleType: 'detector',
       nodeId: 'detector',
-      label: 'PTE-011-09',
+      label: 'PTE-011-02',
       initialParams: {
         decay: 0.995,
         detectorType: 'diode',
@@ -149,8 +149,8 @@ export const demodulationConfig: PracticumConfig = {
   procedure: [
     {
       stepNumber: 1,
-      instruction: 'Install Signal Source PTE-011-01, Power Supply PTE-011-17, Waveform Synthesis PTE-011-08, Detector PTE-011-09, Amplifier PTE-011-07, and Tuned Circuit PTE-011-04 on the panel frame.',
-      instructionId: 'Pasang modul Signal Source PTE-011-01, Power Supply PTE-011-17, Waveform Synthesis PTE-011-08, Detektor PTE-011-09, Amplifier PTE-011-07, dan Tuned Circuit PTE-011-04 pada rangka panel.',
+      instruction: 'Install Signal Source PTE-011-01, Power Supply PTE-011-17, Waveform Synthesis PTE-011-08, Detector PTE-011-02, Amplifier PTE-011-07, and Tuned Circuit PTE-011-04 on the panel frame.',
+      instructionId: 'Pasang modul Signal Source PTE-011-01, Power Supply PTE-011-17, Waveform Synthesis PTE-011-08, Detektor PTE-011-02, Amplifier PTE-011-07, dan Tuned Circuit PTE-011-04 pada rangka panel.',
       requiredConnections: ['conn-psu-signal'],
     },
     {
