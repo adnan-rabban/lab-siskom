@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { FileText, X, Printer } from 'lucide-react';
 
 interface ReportExporterProps {
   practicumTitle: string;
@@ -132,7 +133,7 @@ export default function ReportExporter({
         onClick={() => setShowDialog(true)}
         title={t('Unduh Laporan', 'Download Report')}
       >
-        📄 {t('Laporan', 'Report')}
+        <FileText size={12} /> {t('Laporan', 'Report')}
       </button>
 
       {showDialog && (
@@ -140,7 +141,7 @@ export default function ReportExporter({
           <div className="scorecard-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="scorecard-header">
               <h2 className="scorecard-title">{t('Ekspor Laporan', 'Export Report')}</h2>
-              <button className="scorecard-close" onClick={() => setShowDialog(false)}>✕</button>
+              <button className="scorecard-close" onClick={() => setShowDialog(false)}><X size={16} /></button>
             </div>
             <div className="scorecard-body">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -189,7 +190,7 @@ export default function ReportExporter({
                 {t('Batal', 'Cancel')}
               </button>
               <button className="btn btn-primary" onClick={handleExport}>
-                📄 {t('Cetak Laporan', 'Print Report')}
+                <Printer size={12} /> {t('Cetak Laporan', 'Print Report')}
               </button>
             </div>
           </div>

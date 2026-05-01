@@ -1,7 +1,17 @@
 import {
   useEffect, useState, useMemo, useCallback, useRef,
+  type ReactNode,
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeft, ChevronLeft, ChevronRight,
+  Zap, Radio, Volume2, Target, AudioWaveform, Search,
+  Monitor, Hash, Waves, Cable, ClipboardList, BarChart3,
+  Package, Eye, EyeOff, Minus, Square, X,
+  ZoomIn, Maximize, RotateCcw, Lightbulb,
+  Settings, Wrench, Telescope, GripVertical, FlaskConical,
+  Home, Keyboard, Mouse, Move, RefreshCw,
+} from 'lucide-react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
 import { evaluateMeasurements, type GradingResult } from '../engine/GradingEngine';
 import { amModulationConfig, amMeasurementRows } from '../practicums/amModulation';
@@ -53,7 +63,7 @@ interface WidgetMeta {
   id: string;
   label: string;
   category: 'module' | 'instrument' | 'panel';
-  icon: string;
+  icon: ReactNode;
   defaultPos: WidgetPosition;
   width: number;
 }
@@ -85,7 +95,7 @@ function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
     id: 'instrument-oscilloscope',
     label: 'Oscilloscope',
     category: 'instrument',
-    icon: '📺',
+    icon: <Monitor size={14} />,
     defaultPos: { x: ix, y: instY },
     width: 680,
   });
@@ -97,7 +107,7 @@ function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
         id: `instrument-freq-${inst.nodeId}`,
         label: inst.label,
         category: 'instrument',
-        icon: '🔢',
+        icon: <Hash size={14} />,
         defaultPos: { x: ix, y: instY },
         width: 300,
       });
@@ -107,7 +117,7 @@ function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
         id: `instrument-fgen-${inst.nodeId}`,
         label: inst.label,
         category: 'instrument',
-        icon: '〰️',
+        icon: <Waves size={14} />,
         defaultPos: { x: ix, y: instY },
         width: 300,
       });
@@ -118,24 +128,24 @@ function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
   // Panels row
   const panelY = 780;
   layout.push(
-    { id: 'panel-connections', label: 'Connection Panel', category: 'panel', icon: '🔌', defaultPos: { x: 40, y: panelY }, width: 520 },
-    { id: 'panel-procedure', label: 'Lab Procedure', category: 'panel', icon: '📋', defaultPos: { x: 580, y: panelY }, width: 400 },
-    { id: 'panel-measurements', label: 'Measurement Table', category: 'panel', icon: '📊', defaultPos: { x: 40, y: 1160 }, width: 940 },
+    { id: 'panel-connections', label: 'Connection Panel', category: 'panel', icon: <Cable size={14} />, defaultPos: { x: 40, y: panelY }, width: 520 },
+    { id: 'panel-procedure', label: 'Lab Procedure', category: 'panel', icon: <ClipboardList size={14} />, defaultPos: { x: 580, y: panelY }, width: 400 },
+    { id: 'panel-measurements', label: 'Measurement Table', category: 'panel', icon: <BarChart3 size={14} />, defaultPos: { x: 40, y: 1160 }, width: 940 },
   );
 
   return layout;
 }
 
-function moduleIcon(type: string) {
+function moduleIcon(type: string): ReactNode {
   switch (type) {
-    case 'power-supply': return '⚡';
-    case 'signal-source': return '📡';
-    case 'amplifier': return '🔊';
-    case 'tuned-circuit': return '🎯';
-    case 'waveform-synthesis': return '〰️';
-    case 'detector': return '🔍';
-    case 'fm-modulator': return '📻';
-    default: return '📦';
+    case 'power-supply': return <Zap size={14} />;
+    case 'signal-source': return <Radio size={14} />;
+    case 'amplifier': return <Volume2 size={14} />;
+    case 'tuned-circuit': return <Target size={14} />;
+    case 'waveform-synthesis': return <AudioWaveform size={14} />;
+    case 'detector': return <Search size={14} />;
+    case 'fm-modulator': return <Waves size={14} />;
+    default: return <Package size={14} />;
   }
 }
 
@@ -691,7 +701,7 @@ export default function LabWorkbench() {
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ color: 'var(--text-secondary)' }}>Practicum not found</h2>
           <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 16 }}>
-            ← Back to Home
+            <ArrowLeft size={14} /> Back to Home
           </button>
         </div>
       </div>
@@ -708,7 +718,7 @@ export default function LabWorkbench() {
       {/* ── Topbar ── */}
       <header className="workbench-header canvas-header">
         <button className="workbench-back-btn" onClick={() => navigate('/')}>
-          ← {t('Kembali', 'Back')}
+          <ArrowLeft size={14} /> {t('Kembali', 'Back')}
         </button>
         <div className="workbench-title-section">
           <div className="workbench-title">{t(config.titleId, config.title)}</div>
@@ -728,7 +738,7 @@ export default function LabWorkbench() {
             t={t}
           />
           <button className="btn btn-secondary btn-sm" onClick={handleResetLayout} title="Reset">
-            🔄 Reset
+            <RefreshCw size={12} /> Reset
           </button>
           <div className="lang-toggle">
             <button className={`lang-option ${state.language === 'id' ? 'active' : ''}`}
@@ -749,7 +759,7 @@ export default function LabWorkbench() {
             onClick={() => setToolbarOpen(p => !p)}
             title={toolbarOpen ? 'Collapse' : 'Expand toolbar'}
           >
-            {toolbarOpen ? '◀' : '▶'}
+            {toolbarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
           </button>
 
           {toolbarOpen && (
@@ -758,17 +768,17 @@ export default function LabWorkbench() {
                 <button
                   className={`canvas-sidebar-tab ${toolbarTab === 'tools' ? 'active' : ''}`}
                   onClick={() => setToolbarTab('tools')}
-                >🧰 Tools</button>
+                ><Wrench size={13} /> Tools</button>
                 <button
                   className={`canvas-sidebar-tab ${toolbarTab === 'view' ? 'active' : ''}`}
                   onClick={() => setToolbarTab('view')}
-                >🔭 View</button>
+                ><Telescope size={13} /> View</button>
               </div>
 
               {toolbarTab === 'tools' && (
                 <div className="canvas-sidebar-body">
                   <div className="canvas-tool-group">
-                    <div className="canvas-tool-group-label">📦 {t('Modul', 'Modules')}</div>
+                    <div className="canvas-tool-group-label"><Package size={13} /> {t('Modul', 'Modules')}</div>
                     {moduleWidgets.map(m => (
                       <ToolbarItem
                         key={m.id}
@@ -788,7 +798,7 @@ export default function LabWorkbench() {
                   </div>
 
                   <div className="canvas-tool-group">
-                    <div className="canvas-tool-group-label">📡 {t('Instrumen', 'Instruments')}</div>
+                    <div className="canvas-tool-group-label"><Radio size={13} /> {t('Instrumen', 'Instruments')}</div>
                     {instrumentWidgets.map(m => (
                       <ToolbarItem
                         key={m.id}
@@ -808,7 +818,7 @@ export default function LabWorkbench() {
                   </div>
 
                   <div className="canvas-tool-group">
-                    <div className="canvas-tool-group-label">📋 {t('Panel', 'Panels')}</div>
+                    <div className="canvas-tool-group-label"><ClipboardList size={13} /> {t('Panel', 'Panels')}</div>
                     {panelWidgets.map(m => (
                       <ToolbarItem
                         key={m.id}
@@ -832,7 +842,7 @@ export default function LabWorkbench() {
               {toolbarTab === 'view' && (
                 <div className="canvas-sidebar-body">
                   <div className="canvas-tool-group">
-                    <div className="canvas-tool-group-label">🔍 {t('Zoom', 'Zoom')}</div>
+                    <div className="canvas-tool-group-label"><ZoomIn size={13} /> {t('Zoom', 'Zoom')}</div>
                     <div className="canvas-zoom-controls">
                       <button className="canvas-zoom-btn" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
                       <span className="canvas-zoom-label">{Math.round(zoom * 100)}%</span>
@@ -846,26 +856,26 @@ export default function LabWorkbench() {
                     </div>
                   </div>
                   <div className="canvas-tool-group">
-                    <div className="canvas-tool-group-label">⚙️ {t('Layout', 'Layout')}</div>
+                    <div className="canvas-tool-group-label"><Settings size={13} /> {t('Layout', 'Layout')}</div>
                     <div className="canvas-view-btns">
                       <button className="canvas-view-btn danger" onClick={handleResetLayout}>
-                        🔄 {t('Reset Layout', 'Reset Layout')}
+                        <RotateCcw size={12} /> {t('Reset Layout', 'Reset Layout')}
                       </button>
                     </div>
                   </div>
                   <div className="canvas-tool-group">
-                    <div className="canvas-tool-group-label">💡 {t('Tips', 'Tips')}</div>
+                    <div className="canvas-tool-group-label"><Lightbulb size={13} /> {t('Tips', 'Tips')}</div>
                     <div className="canvas-tips">
-                      <p>🖱️ <b>Ctrl+Scroll</b> — {t('Zoom in/out', 'Zoom in/out')}</p>
-                      <p>🖱️ <b>Scroll</b> — {t('Geser kanvas', 'Pan canvas')}</p>
-                      <p>🖱️ <b>Shift+Scroll</b> — {t('Geser horizontal', 'Pan horizontal')}</p>
-                      <p>🖱️ <b>{t('Klik tengah', 'Middle click')}</b> — {t('Geser kanvas', 'Pan canvas')}</p>
-                      <p>⌨️ <b>Space+Drag</b> — {t('Geser kanvas', 'Pan canvas')}</p>
-                      <p>⌨️ <b>F</b> — {t('Sesuaikan layar', 'Fit screen')}</p>
-                      <p>⌨️ <b>0</b> — {t('Reset zoom 100%', 'Reset zoom 100%')}</p>
-                      <p>⌨️ <b>+/−</b> — {t('Zoom in/out', 'Zoom in/out')}</p>
-                      <p>⌨️ <b>← → ↑ ↓</b> — {t('Geser kanvas', 'Pan canvas')}</p>
-                      <p>⠿ {t('Drag header widget untuk pindah', 'Drag widget header to move')}</p>
+                      <p><Mouse size={12} /> <b>Ctrl+Scroll</b> — {t('Zoom in/out', 'Zoom in/out')}</p>
+                      <p><Mouse size={12} /> <b>Scroll</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p><Mouse size={12} /> <b>Shift+Scroll</b> — {t('Geser horizontal', 'Pan horizontal')}</p>
+                      <p><Mouse size={12} /> <b>{t('Klik tengah', 'Middle click')}</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p><Keyboard size={12} /> <b>Space+Drag</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p><Keyboard size={12} /> <b>F</b> — {t('Sesuaikan layar', 'Fit screen')}</p>
+                      <p><Keyboard size={12} /> <b>0</b> — {t('Reset zoom 100%', 'Reset zoom 100%')}</p>
+                      <p><Keyboard size={12} /> <b>+/−</b> — {t('Zoom in/out', 'Zoom in/out')}</p>
+                      <p><Keyboard size={12} /> <b>← → ↑ ↓</b> — {t('Geser kanvas', 'Pan canvas')}</p>
+                      <p><Move size={12} /> {t('Drag header widget untuk pindah', 'Drag widget header to move')}</p>
                     </div>
                   </div>
                 </div>
@@ -925,7 +935,7 @@ export default function LabWorkbench() {
                     onPointerDown={e => startWidgetDrag(e, meta.id, meta)}
                   >
                     <div className="canvas-widget-header-left">
-                      <span className="canvas-widget-drag-grip">⠿</span>
+                      <span className="canvas-widget-drag-grip"><GripVertical size={12} /></span>
                       <span className="canvas-widget-icon">{meta.icon}</span>
                       <span className="canvas-widget-title">{meta.label}</span>
                       <span className={`canvas-widget-cat canvas-widget-cat-${meta.category}`}>
@@ -939,7 +949,7 @@ export default function LabWorkbench() {
                         onPointerDown={e => e.stopPropagation()}
                         onClick={() => toggleMinimized(meta.id)}
                       >
-                        {isMin ? '□' : '−'}
+                        {isMin ? <Square size={11} /> : <Minus size={11} />}
                       </button>
                       <button
                         className="canvas-widget-btn canvas-widget-btn-close"
@@ -947,7 +957,7 @@ export default function LabWorkbench() {
                         onPointerDown={e => e.stopPropagation()}
                         onClick={() => hideWidget(meta.id)}
                       >
-                        ✕
+                        <X size={11} />
                       </button>
                     </div>
                   </div>
@@ -966,7 +976,7 @@ export default function LabWorkbench() {
           {/* Canvas hint when empty */}
           {widgetMetas.every(m => hiddenWidgets.has(m.id)) && (
             <div className="canvas-empty-hint">
-              <div>🧪</div>
+              <div><FlaskConical size={32} /></div>
               <p>{t('Semua widget tersembunyi', 'All widgets hidden')}</p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 {t('Gunakan toolbar kiri untuk menampilkan kembali', 'Use the left toolbar to show them')}
@@ -986,13 +996,13 @@ export default function LabWorkbench() {
             </span>
             <button className="canvas-nav-btn" title="Zoom In (+)" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
             <div style={{ width: 1, height: 16, background: 'var(--border-medium)', margin: '0 2px' }} />
-            <button className="canvas-nav-btn" title={t('Sesuaikan Layar (F)', 'Fit Screen (F)')} onClick={handleFitToScreen} style={{ fontSize: 12 }}>⊡</button>
-            <button className="canvas-nav-btn" title={t('Reset Tampilan (Home)', 'Reset View (Home)')} onClick={() => { setZoom(0.85); setPan({ x: 80, y: 40 }); }} style={{ fontSize: 11 }}>⌂</button>
+            <button className="canvas-nav-btn" title={t('Sesuaikan Layar (F)', 'Fit Screen (F)')} onClick={handleFitToScreen}><Maximize size={12} /></button>
+            <button className="canvas-nav-btn" title={t('Reset Tampilan (Home)', 'Reset View (Home)')} onClick={() => { setZoom(0.85); setPan({ x: 80, y: 40 }); }}><Home size={12} /></button>
           </div>
 
           {/* ── Shortcut HUD ── */}
           <div className="canvas-shortcut-hud">
-            <div className="canvas-shortcut-hud-title">⌨ {t('Pintasan', 'Shortcuts')}</div>
+            <div className="canvas-shortcut-hud-title"><Keyboard size={12} /> {t('Pintasan', 'Shortcuts')}</div>
             {[
               ['Ctrl + Scroll', t('Zoom in/out', 'Zoom in/out')],
               ['Scroll', t('Geser canvas', 'Pan canvas')],
@@ -1044,7 +1054,7 @@ function ToolbarItem({
         onClick={hidden ? onShow : onHide}
         title={hidden ? 'Show widget' : 'Hide widget'}
       >
-        {hidden ? '👁️‍🗨️' : '👁️'}
+        {hidden ? <EyeOff size={13} /> : <Eye size={13} />}
       </button>
       <button className="canvas-tool-name" onClick={onFocus} disabled={hidden} title="Focus on widget">
         <span className="canvas-tool-icon">{meta.icon}</span>
@@ -1056,7 +1066,7 @@ function ToolbarItem({
           onClick={onMinToggle}
           title={minimized ? 'Restore' : 'Minimize'}
         >
-          {minimized ? '□' : '−'}
+          {minimized ? <Square size={11} /> : <Minus size={11} />}
         </button>
       )}
     </div>

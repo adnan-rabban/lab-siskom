@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
+import { Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 
 // ============================================================
 // Toast Notification System
@@ -69,11 +70,11 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     return () => clearTimeout(timer);
   }, [toast.duration, onDismiss]);
 
-  const icons: Record<ToastType, string> = {
-    info: 'ℹ',
-    success: '✓',
-    warning: '⚠',
-    error: '✕',
+  const icons: Record<ToastType, ReactNode> = {
+    info: <Info size={14} />,
+    success: <CheckCircle size={14} />,
+    warning: <AlertTriangle size={14} />,
+    error: <XCircle size={14} />,
   };
 
   return (

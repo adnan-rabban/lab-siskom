@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { GradingResult } from '../engine/GradingEngine';
+import { X, Check, Minus, Circle } from 'lucide-react';
 
 interface ScoreCardProps {
   result: GradingResult;
@@ -32,7 +33,7 @@ export default function ScoreCard({ result, onClose, t }: ScoreCardProps) {
       <div className="scorecard-modal" onClick={e => e.stopPropagation()}>
         <div className="scorecard-header">
           <h2 className="scorecard-title">{t('Hasil Penilaian', 'Assessment Results')}</h2>
-          <button className="scorecard-close" onClick={onClose}>✕</button>
+          <button className="scorecard-close" onClick={onClose}><X size={16} /></button>
         </div>
 
         <div className="scorecard-body">
@@ -87,9 +88,9 @@ export default function ScoreCard({ result, onClose, t }: ScoreCardProps) {
               {result.fieldResults.map(fr => (
                 <div key={fr.fieldId} className={`scorecard-field scorecard-field-${fr.status}`}>
                   <span className="scorecard-field-icon">
-                    {fr.status === 'correct' ? '✓' :
-                     fr.status === 'close' ? '~' :
-                     fr.status === 'unanswered' ? '○' : '✕'}
+                    {fr.status === 'correct' ? <Check size={12} /> :
+                     fr.status === 'close' ? <Minus size={12} /> :
+                     fr.status === 'unanswered' ? <Circle size={12} /> : <X size={12} />}
                   </span>
                   <span className="scorecard-field-label">{fr.fieldLabel}</span>
                   <span className="scorecard-field-value">

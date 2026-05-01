@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
 import type { MeasurementRow } from '../engine/types';
+import { BarChart3 } from 'lucide-react';
 
 interface MeasurementTableProps {
   title: string;
@@ -164,7 +165,7 @@ export default function MeasurementTable({
             disabled={!allFilled}
             style={{ opacity: allFilled ? 1 : 0.5 }}
           >
-            📊 {t('Kirim untuk Penilaian', 'Submit for Grading')}
+            <BarChart3 size={12} /> {t('Kirim untuk Penilaian', 'Submit for Grading')}
           </button>
         </div>
       )}

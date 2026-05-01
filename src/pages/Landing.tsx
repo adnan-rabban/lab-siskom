@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Zap } from 'lucide-react';
 import type { PracticumConfig } from '../engine/types';
 import { amModulationConfig } from '../practicums/amModulation';
 import { demodulationConfig } from '../practicums/demodulation';
@@ -152,7 +153,7 @@ export default function Landing() {
         {/* Hero Section */}
         <header className="landing-header">
           <div className="landing-badge">
-            <span style={{ fontSize: '14px' }}>⚡</span>
+            <Zap size={14} />
             Virtual Engineering Laboratory
           </div>
           <h1 className="landing-title">

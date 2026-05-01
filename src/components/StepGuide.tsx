@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ProcedureStep } from '../engine/types';
 import { useSignalGraph } from '../engine/SignalGraphContext';
+import { ChevronDown, Check, FileEdit } from 'lucide-react';
 
 interface StepGuideProps {
   steps: ProcedureStep[];
@@ -27,7 +28,7 @@ export default function StepGuide({ steps, currentStep, onStepClick, completedSt
             {completed}/{steps.length}
           </span>
         </span>
-        <span className={`step-guide-toggle ${isOpen ? 'open' : ''}`}>▼</span>
+        <span className={`step-guide-toggle ${isOpen ? 'open' : ''}`}><ChevronDown size={14} /></span>
       </div>
       {/* Progress Bar */}
       <div className="step-guide-progress">
@@ -47,7 +48,7 @@ export default function StepGuide({ steps, currentStep, onStepClick, completedSt
                 tabIndex={0}
               >
                 <div className="step-number">
-                  {isCompleted ? '✓' : step.stepNumber}
+                  {isCompleted ? <Check size={12} /> : step.stepNumber}
                 </div>
                 <div className="step-text">
                   {t(step.instructionId, step.instruction)}
@@ -58,7 +59,7 @@ export default function StepGuide({ steps, currentStep, onStepClick, completedSt
                       color: 'var(--accent-amber)',
                       fontStyle: 'italic',
                     }}>
-                      📝 {t(step.observationId || step.observation, step.observation)}
+                      <FileEdit size={11} /> {t(step.observationId || step.observation, step.observation)}
                     </div>
                   )}
                 </div>

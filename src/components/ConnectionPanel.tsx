@@ -1,6 +1,7 @@
 import type { Connection } from '../engine/types';
 import { useSignalGraph } from '../engine/SignalGraphContext';
 import ToggleSwitch from './ToggleSwitch';
+import { Check, Circle, Zap, X } from 'lucide-react';
 
 interface ConnectionPanelProps {
   connections: Connection[];
@@ -59,7 +60,7 @@ export default function ConnectionPanel({
                 onChange={() => dispatch({ type: 'TOGGLE_CONNECTION', connectionId: conn.id })}
               />
               <span className={`connection-status ${statusClass}`}>
-                {conn.connected ? '✓' : '○'}
+                {conn.connected ? <Check size={11} /> : <Circle size={11} />}
               </span>
             </div>
           );
@@ -69,12 +70,12 @@ export default function ConnectionPanel({
         <div className="connection-panel-actions">
           {onConnectAll && (
             <button className="btn btn-secondary btn-sm" onClick={onConnectAll}>
-              ⚡ {t('Hubungkan Semua', 'Connect All')}
+              <Zap size={11} /> {t('Hubungkan Semua', 'Connect All')}
             </button>
           )}
           {onDisconnectAll && (
             <button className="btn btn-secondary btn-sm" onClick={onDisconnectAll}>
-              ✕ {t('Lepas Semua', 'Disconnect All')}
+              <X size={11} /> {t('Lepas Semua', 'Disconnect All')}
             </button>
           )}
         </div>
