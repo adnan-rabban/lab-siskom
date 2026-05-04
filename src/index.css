@@ -4,7 +4,8 @@
    Black + Orange · Structured · Minimal
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* NOTE: Google Fonts loaded via <link rel="preload"> in index.html
+   to avoid render-blocking @import. Do NOT add @import here. */
 
 /* ============================================================
    Design Tokens
@@ -527,3 +528,38 @@ img {
     --fs-4xl: 2.25rem;
   }
 }
+
+/* ============================================================
+   Performance Optimizations — CSS Containment & GPU Hints
+   ============================================================ */
+
+/* Module panels: isolate layout/paint to avoid reflow cascade */
+.module-panel {
+  contain: layout style;
+}
+
+/* Instrument panels: heavy rendering — full containment */
+.instrument-panel {
+  contain: layout style paint;
+}
+
+/* Oscilloscope canvas: GPU-composited layer for smooth rendering */
+.oscilloscope-canvas {
+  will-change: contents;
+}
+
+/* Knob component: frequent transform updates during drag */
+.knob-indicator {
+  will-change: transform;
+}
+
+/* Toast animations: GPU layer for enter/exit transitions */
+.toast-item {
+  will-change: transform, opacity;
+}
+
+/* Score card overlay: promote compositing layer */
+.scorecard-overlay {
+  will-change: opacity;
+}
+

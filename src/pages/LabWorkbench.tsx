@@ -1,5 +1,5 @@
 import {
-  useEffect, useState, useMemo, useCallback, useRef,
+  useEffect, useState, useMemo, useCallback, useRef, memo,
   type ReactNode,
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -766,9 +766,10 @@ export default function LabWorkbench() {
   }
 
   // ── Toolbar widget groups ─────────────────────────────────
-  const moduleWidgets = widgetMetas.filter(m => m.category === 'module');
-  const instrumentWidgets = widgetMetas.filter(m => m.category === 'instrument');
-  const panelWidgets = widgetMetas.filter(m => m.category === 'panel');
+  // Perf: memoize widget category filters to avoid recalculation every render
+  const moduleWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'module'), [widgetMetas]);
+  const instrumentWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'instrument'), [widgetMetas]);
+  const panelWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'panel'), [widgetMetas]);
 
   return (
     <div className="workbench-page canvas-workbench-page">
@@ -1095,7 +1096,7 @@ export default function LabWorkbench() {
 // ============================================================
 // Toolbar Item Component
 // ============================================================
-function ToolbarItem({
+const ToolbarItem = memo(function ToolbarItem({
   meta, hidden, minimized,
   onShow, onHide, onMinToggle, onFocus,
 }: {
@@ -1131,7 +1132,7 @@ function ToolbarItem({
       )}
     </div>
   );
-}
+});
 
 // ============================================================
 // Helper: Get ports for a module type

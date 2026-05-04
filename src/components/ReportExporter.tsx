@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { FileText, X, Printer } from 'lucide-react';
 
 interface ReportExporterProps {
@@ -21,7 +21,7 @@ export default function ReportExporter({
   const [showDialog, setShowDialog] = useState(false);
   const [studentName, setStudentName] = useState('');
   const [studentNIM, setStudentNIM] = useState('');
-  const printFrameRef = useRef<HTMLIFrameElement>(null);
+
 
   const handleExport = useCallback(() => {
     // Capture oscilloscope canvas
@@ -40,7 +40,7 @@ export default function ReportExporter({
       day: 'numeric',
     });
 
-    const connectedWires = connections.filter(c => c.connected);
+
 
     const html = `<!DOCTYPE html>
 <html lang="id">

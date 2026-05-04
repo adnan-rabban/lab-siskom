@@ -6,7 +6,7 @@
 // and are updated imperatively each frame.
 // ============================================================
 
-import React, { createContext, useContext, useReducer, useRef, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useRef, useCallback, useMemo, type ReactNode } from 'react';
 import type { SignalNode, Connection, ConnectionValidation, SignalParams, Language } from './types';
 
 // ============================================================
@@ -170,10 +170,14 @@ export function SignalGraphProvider({ children, initialState }: SignalGraphProvi
     [state.language]
   );
 
+  // Perf: memoize Provider value to prevent unnecessary re-renders in consumers
+  const value = useMemo<SignalGraphContextType>(
+    () => ({ state, dispatch, signalValuesRef, validateConnection, t }),
+    [state, dispatch, signalValuesRef, validateConnection, t]
+  );
+
   return (
-    <SignalGraphContext.Provider
-      value={{ state, dispatch, signalValuesRef, validateConnection, t }}
-    >
+    <SignalGraphContext.Provider value={value}>
       {children}
     </SignalGraphContext.Provider>
   );

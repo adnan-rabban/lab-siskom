@@ -73,9 +73,22 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
 
     let animId: number;
     let time = 0;
+    let lastFrameTime = 0;
+    let isVisible = true;
 
-    const render = () => {
-      const dpr = window.devicePixelRatio || 1;
+    // Throttle to ~30fps — waveform background doesn't need 60fps
+    const FRAME_INTERVAL = 1000 / 30;
+
+    const render = (timestamp: number) => {
+      // Skip frames to hit ~30fps target
+      if (timestamp - lastFrameTime < FRAME_INTERVAL) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+      lastFrameTime = timestamp;
+
+      // Cap DPR at 2 for HiDPI — avoids 3x/4x over-rendering
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
       canvas.width = w * dpr;
@@ -107,8 +120,8 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
         ctx.stroke();
       }
 
-      // Grid dots
-      const gridSize = 60;
+      // Grid dots — increased spacing for fewer draw calls
+      const gridSize = 80;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
       for (let x = 0; x < w; x += gridSize) {
         for (let y = 0; y < h; y += gridSize) {
@@ -122,8 +135,24 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
       animId = requestAnimationFrame(render);
     };
 
+    // Page Visibility API — pause animation when tab is hidden
+    const handleVisibility = () => {
+      isVisible = !document.hidden;
+      if (isVisible) {
+        lastFrameTime = 0;
+        animId = requestAnimationFrame(render);
+      } else {
+        cancelAnimationFrame(animId);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
     animId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animId);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [canvasRef]);
 }
 

@@ -92,7 +92,6 @@ interface OscilloscopeProps {
 
 export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animFrameRef = useRef<number>(0);
   const { state, t } = useSignalGraph();
 
   const [timeDivIndex, setTimeDivIndex] = useState(6); // 100µs default
@@ -221,7 +220,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
 
       // BUG-02 fix: GND coupling — show flat line
       if (channel.coupling === 'GND') {
-        const voltsPerDiv = VOLTS_DIV_STEPS[channel.voltsDivIndex].value;
+        // voltsPerDiv not needed for GND flat line
         const pixelsPerDiv = ch_h / GRID_DIVS_Y;
         const centerY = ch_h / 2 - channel.verticalOffset * pixelsPerDiv;
         ctx.beginPath();
@@ -359,20 +358,37 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     }
   }, [state, ch1, ch2, timeDivIndex, totalTime, running, cursorMode, cursorPos]);
 
-  // Animation loop
+  // Animation loop — with Page Visibility API for background tab efficiency
   useEffect(() => {
-    if (!running) {
-      renderFrame();
-      return;
-    }
+    let frameId = 0;
+    let isVisible = !document.hidden;
 
     const loop = () => {
       renderFrame();
-      animFrameRef.current = requestAnimationFrame(loop);
+      frameId = requestAnimationFrame(loop);
     };
-    animFrameRef.current = requestAnimationFrame(loop);
 
-    return () => cancelAnimationFrame(animFrameRef.current);
+    const startLoop = () => {
+      cancelAnimationFrame(frameId);
+      if (running && isVisible) {
+        frameId = requestAnimationFrame(loop);
+      } else {
+        renderFrame(); // Render one frame for static display
+      }
+    };
+
+    const handleVisibility = () => {
+      isVisible = !document.hidden;
+      startLoop();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    startLoop();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [renderFrame, running]);
 
   // --- Handlers ---

@@ -6,7 +6,7 @@
 // oscilloscope so we don't need 455k samples per frame.
 // ============================================================
 
-import type { WaveformType, SignalParams, SignalNode, Connection } from './types';
+import type { WaveformType, SignalNode, Connection } from './types';
 
 const TWO_PI = 2 * Math.PI;
 
@@ -216,9 +216,9 @@ export function envelopeDetect(signal: Float32Array, decay: number = 0.995): Flo
  */
 export function productDetect(
   signal: Float32Array,
-  carrierFreq: number,
+  _carrierFreq: number,
   cyclesToShow: number,
-  decay: number = 0.995
+  _decay: number = 0.995
 ): Float32Array {
   const output = new Float32Array(signal.length);
 
@@ -265,7 +265,6 @@ export function measureVpp(signal: Float32Array): number {
 export function measureAMEnvelope(signal: Float32Array): { eMax: number; eMin: number; modulationIndex: number } {
   // Find envelope peaks
   const peaks: number[] = [];
-  const troughs: number[] = [];
 
   // Simple peak detection on rectified signal
   const rectified = new Float32Array(signal.length);
@@ -328,7 +327,7 @@ export function processSignalGraph(
   nodes: Map<string, SignalNode>,
   connections: Connection[],
   targetNodeId: string,
-  targetPortId: string,
+  _targetPortId: string,
   numSamples: number = 1024,
   cyclesToShow: number = 10
 ): Float32Array | null {
@@ -383,7 +382,6 @@ export function processSignalGraph(
         return new Float32Array(numSamples);
       }
 
-      const freq = node.params.frequency || 300;
       const amp = node.params.amplitude || 1;
       const wf = node.params.waveform || 'sine';
       const dc = node.params.dcOffset || 0;

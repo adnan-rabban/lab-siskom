@@ -337,6 +337,8 @@
   overflow: visible; /* Allow content to size naturally — no clipping */
   transition: box-shadow var(--duration-fast);
   min-width: 180px;
+  /* Perf: isolate each widget to its own layout/paint boundary */
+  contain: layout style;
 }
 /* Re-apply clip only to header so its rounded corners stay crisp */
 .canvas-widget > .canvas-widget-header {
@@ -451,6 +453,9 @@
 .canvas-widget-body {
   padding: var(--sp-2);
   overflow: visible;
+  /* Perf: skip rendering for off-screen widget bodies */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
 }
 
 /* Minimized state visual cue */
