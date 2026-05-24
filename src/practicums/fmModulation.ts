@@ -163,7 +163,7 @@ export const fmModulationConfig: PracticumConfig = {
 
   observationTargets: [
     {
-      id: 'fm-dev-75',
+      id: 'fm-dev-75-max',
       label: 'Max Frequency at 75kHz Deviation',
       labelId: 'Frekuensi Maks pada Deviasi 75kHz',
       unit: 'Hz',
@@ -171,11 +171,27 @@ export const fmModulationConfig: PracticumConfig = {
       tolerance: 5,
     },
     {
-      id: 'fm-dev-25',
+      id: 'fm-dev-75-min',
+      label: 'Min Frequency at 75kHz Deviation',
+      labelId: 'Frekuensi Min pada Deviasi 75kHz',
+      unit: 'Hz',
+      expectedValue: 380000, // 455k - 75k
+      tolerance: 5,
+    },
+    {
+      id: 'fm-dev-25-max',
       label: 'Max Frequency at 25kHz Deviation',
       labelId: 'Frekuensi Maks pada Deviasi 25kHz',
       unit: 'Hz',
       expectedValue: 480000, // 455k + 25k
+      tolerance: 5,
+    },
+    {
+      id: 'fm-dev-25-min',
+      label: 'Min Frequency at 25kHz Deviation',
+      labelId: 'Frekuensi Min pada Deviasi 25kHz',
+      unit: 'Hz',
+      expectedValue: 430000, // 455k - 25k
       tolerance: 5,
     },
   ],
@@ -185,7 +201,6 @@ export const fmMeasurementRows: MeasurementRow[] = [
   {
     id: 'fm-75k',
     label: 'Δf = 75 kHz',
-    targetId: 'fm-dev-75',
     fields: [
       { fieldId: 'tmin', fieldLabel: 'T min (s)', unit: 's', value: '' },
       { fieldId: 'tmax', fieldLabel: 'T max (s)', unit: 's', value: '' },
@@ -196,6 +211,7 @@ export const fmMeasurementRows: MeasurementRow[] = [
         fieldLabel: 'f max',
         unit: 'Hz',
         formula: '1 / T min',
+        targetId: 'fm-dev-75-max',
         compute: (fields) => {
           const tmin = fields.tmin || 0;
           return tmin > 0 ? 1 / tmin : 0;
@@ -206,6 +222,7 @@ export const fmMeasurementRows: MeasurementRow[] = [
         fieldLabel: 'f min',
         unit: 'Hz',
         formula: '1 / T max',
+        targetId: 'fm-dev-75-min',
         compute: (fields) => {
           const tmax = fields.tmax || 0;
           return tmax > 0 ? 1 / tmax : 0;
@@ -216,7 +233,6 @@ export const fmMeasurementRows: MeasurementRow[] = [
   {
     id: 'fm-25k',
     label: 'Δf = 25 kHz',
-    targetId: 'fm-dev-25',
     fields: [
       { fieldId: 'tmin', fieldLabel: 'T min (s)', unit: 's', value: '' },
       { fieldId: 'tmax', fieldLabel: 'T max (s)', unit: 's', value: '' },
@@ -227,6 +243,7 @@ export const fmMeasurementRows: MeasurementRow[] = [
         fieldLabel: 'f max',
         unit: 'Hz',
         formula: '1 / T min',
+        targetId: 'fm-dev-25-max',
         compute: (fields) => {
           const tmin = fields.tmin || 0;
           return tmin > 0 ? 1 / tmin : 0;
@@ -237,6 +254,7 @@ export const fmMeasurementRows: MeasurementRow[] = [
         fieldLabel: 'f min',
         unit: 'Hz',
         formula: '1 / T max',
+        targetId: 'fm-dev-25-min',
         compute: (fields) => {
           const tmax = fields.tmax || 0;
           return tmax > 0 ? 1 / tmax : 0;

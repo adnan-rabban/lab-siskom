@@ -214,6 +214,7 @@ export interface MeasurementRow {
     fieldLabel: string;
     unit: string;
     formula: string; // display formula
+    targetId?: string; // Target ID for specific grading target mapping
     compute: (fields: Record<string, number>) => number;
   }[];
 }

@@ -217,8 +217,7 @@ export function envelopeDetect(signal: Float32Array, decay: number = 0.995): Flo
 export function productDetect(
   signal: Float32Array,
   _carrierFreq: number,
-  cyclesToShow: number,
-  _decay: number = 0.995
+  cyclesToShow: number
 ): Float32Array {
   const output = new Float32Array(signal.length);
 
@@ -298,19 +297,34 @@ export function estimateFrequency(
   realFrequency: number,
   cyclesToShow: number
 ): number {
-  let crossings = 0;
+  if (signal.length === 0) return 0;
+
+  // Calculate the average (mean) value of the signal to act as AC coupling
+  let sum = 0;
+  for (let i = 0; i < signal.length; i++) {
+    sum += signal[i];
+  }
+  const avg = sum / signal.length;
+
+  const crossingIndices: number[] = [];
   for (let i = 1; i < signal.length; i++) {
-    if ((signal[i - 1] <= 0 && signal[i] > 0)) {
-      crossings++;
+    if (signal[i - 1] <= avg && signal[i] > avg) {
+      const fraction = (avg - signal[i - 1]) / (signal[i] - signal[i - 1]);
+      crossingIndices.push(i - 1 + fraction);
     }
   }
 
-  // crossings = number of complete positive-going zero crossings in cyclesToShow carrier cycles
-  // Actual frequency = crossings / cyclesToShow * realFrequency (if viewing carrier cycles)
-  // Simpler: the displayed signal has `crossings` cycles in the view
-  // Real frequency = crossings * (realFrequency / cyclesToShow)
+  if (crossingIndices.length >= 2) {
+    const n = crossingIndices.length - 1;
+    const totalSamples = crossingIndices[crossingIndices.length - 1] - crossingIndices[0];
+    const periodInSamples = totalSamples / n;
+    const sampleRate = (signal.length * realFrequency) / cyclesToShow;
+    return sampleRate / periodInSamples;
+  }
+
+  // Fallback to basic crossing count if not enough crossings
   if (cyclesToShow > 0) {
-    return crossings * (realFrequency / cyclesToShow);
+    return crossingIndices.length * (realFrequency / cyclesToShow);
   }
   return realFrequency;
 }
@@ -535,7 +549,7 @@ export function processSignalGraph(
         // Product detector: needs carrier frequency from upstream
         const inputNode = nodes.get(inputConn.fromNodeId);
         const carrierFreq = inputNode?.params.frequency || 455000;
-        return productDetect(inputSignal, carrierFreq, cyclesToShow, detDecay);
+        return productDetect(inputSignal, carrierFreq, cyclesToShow);
       }
 
       // Default: diode (envelope) detector

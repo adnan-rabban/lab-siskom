@@ -259,7 +259,7 @@ export const demodMeasurementRows: MeasurementRow[] = [
     fields: [
       { fieldId: 'emax', fieldLabel: 'Emax (demod)', unit: 'V', value: '' },
       { fieldId: 'emin', fieldLabel: 'Emin (demod)', unit: 'V', value: '' },
-      { fieldId: 'freq', fieldLabel: 'f (demod)', unit: 'Hz', value: '' },
+      { fieldId: 'freq', fieldLabel: 'f (demod)', unit: 'Hz', value: '', expected: 300 },
     ],
     calculated: [
       {

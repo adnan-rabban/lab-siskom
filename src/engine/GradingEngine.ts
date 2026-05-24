@@ -50,8 +50,8 @@ export function evaluateMeasurements(
 
     // Evaluate each input field (Emax, Emin)
     for (const field of row.fields) {
-      const studentVal = parsedFields[field.fieldId];
-      const isEmpty = !rowValues[field.fieldId] || rowValues[field.fieldId].trim() === '';
+      const rawVal = rowValues[field.fieldId];
+      const isEmpty = !rawVal || rawVal.trim() === '';
 
       const pointsPerField = 10;
       maxScore += pointsPerField;
@@ -68,10 +68,39 @@ export function evaluateMeasurements(
           maxPoints: pointsPerField,
         });
       } else {
-        // Fields like Emax/Emin don't have exact expected values
-        // They get points for being filled in with reasonable values
-        const reasonable = studentVal > 0 && studentVal < 100;
-        const pts = reasonable ? pointsPerField : Math.round(pointsPerField * 0.5);
+        const studentVal = parsedFields[field.fieldId];
+        let status: FieldResult['status'] = 'incorrect';
+        let pts = 0;
+
+        if (field.unit === '') {
+          // Qualitative/text field - correct if not empty
+          status = 'correct';
+          pts = pointsPerField;
+        } else if (field.expected !== undefined && field.expected !== null) {
+          // Explicit expected value
+          const expected = field.expected;
+          const tolerance = 20; // default 20% tolerance for inputs
+          const deviation = Math.abs(studentVal - expected);
+          const toleranceAbs = (tolerance * expected) / 100;
+
+          if (deviation <= toleranceAbs * 0.5) {
+            status = 'correct';
+            pts = pointsPerField;
+          } else if (deviation <= toleranceAbs) {
+            status = 'close';
+            pts = Math.round(pointsPerField * 0.7);
+          } else if (deviation <= toleranceAbs * 2) {
+            status = 'close';
+            pts = Math.round(pointsPerField * 0.3);
+          }
+        } else {
+          // Fields like Emax/Emin don't have exact expected values
+          // They get points for being filled in with reasonable values
+          const reasonable = studentVal > 0 && studentVal < 100;
+          status = reasonable ? 'correct' : 'close';
+          pts = reasonable ? pointsPerField : Math.round(pointsPerField * 0.5);
+        }
+
         totalScore += pts;
         fieldResults.push({
           fieldId: `${row.id}-${field.fieldId}`,
@@ -79,7 +108,7 @@ export function evaluateMeasurements(
           studentValue: studentVal,
           expectedValue: field.expected ?? null,
           tolerance: 20,
-          status: reasonable ? 'correct' : 'close',
+          status,
           points: pts,
           maxPoints: pointsPerField,
         });
@@ -93,11 +122,10 @@ export function evaluateMeasurements(
         const pointsPerCalc = 15;
         maxScore += pointsPerCalc;
 
-        // BUG-06 fix: Use explicit targetId mapping, fallback to heuristic
+        // Find matching target: prefer calc.targetId first, then row.targetId, then heuristics
         const target = targets.find(t => {
-          // Prefer explicit targetId on the row
+          if (calc.targetId && t.id === calc.targetId) return true;
           if (row.targetId && t.id === row.targetId) return true;
-          // Fallback heuristic for backwards compatibility
           if (row.id.includes('50') && t.id.includes('50')) return true;
           if (row.id.includes('100') && t.id.includes('100')) return true;
           if (row.id.includes('75') && t.id.includes('75')) return true;
