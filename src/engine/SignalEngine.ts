@@ -279,9 +279,17 @@ export function measureAMEnvelope(signal: Float32Array): { eMax: number; eMin: n
     }
   }
 
-  // Use overall max and min of peaks for envelope
-  const eMax = peaks.length > 0 ? Math.max(...peaks) : 0;
-  const eMin = peaks.length > 0 ? Math.min(...peaks) : 0;
+  // BUG-FIX: Math.max(...peaks) / Math.min(...peaks) uses the spread operator
+  // to pass all peaks as function arguments. JavaScript engines cap the number of
+  // function arguments, so for signals with many peaks this throws a
+  // "Maximum call stack size exceeded" RangeError. Use reduce instead.
+  let eMax = 0;
+  let eMin = Infinity;
+  for (let i = 0; i < peaks.length; i++) {
+    if (peaks[i] > eMax) eMax = peaks[i];
+    if (peaks[i] < eMin) eMin = peaks[i];
+  }
+  if (peaks.length === 0) { eMax = 0; eMin = 0; }
 
   const modulationIndex = eMax + eMin > 0
     ? ((eMax - eMin) / (eMax + eMin)) * 100
@@ -421,8 +429,15 @@ export function processSignalGraph(
   targetNodeId: string,
   _targetPortId: string,
   numSamples: number = 1024,
-  cyclesToShow: number = 10
+  cyclesToShow: number = 10,
+  // BUG-FIX: visited set prevents infinite recursion if the connection graph
+  // ever contains a cycle (e.g. corrupted persisted state).
+  _visited: Set<string> = new Set()
 ): Float32Array | null {
+  // Cycle guard — return silence instead of stack-overflowing
+  if (_visited.has(targetNodeId)) return new Float32Array(numSamples);
+  _visited.add(targetNodeId);
+
   const node = nodes.get(targetNodeId);
   if (!node) return null;
 
@@ -498,7 +513,7 @@ export function processSignalGraph(
       const inputSignal = processSignalGraph(
         nodes, connections,
         inputConn.fromNodeId, inputConn.fromPortId,
-        numSamples, cyclesToShow
+        numSamples, cyclesToShow, _visited
       );
       if (!inputSignal) return new Float32Array(numSamples);
 
@@ -515,7 +530,7 @@ export function processSignalGraph(
       const inputSignal = processSignalGraph(
         nodes, connections,
         inputConn.fromNodeId, inputConn.fromPortId,
-        numSamples, cyclesToShow
+        numSamples, cyclesToShow, _visited
       );
       if (!inputSignal) return new Float32Array(numSamples);
 
@@ -565,7 +580,7 @@ export function processSignalGraph(
       return processSignalGraph(
         nodes, connections,
         carrierConn.fromNodeId, carrierConn.fromPortId,
-        numSamples, cyclesToShow
+        numSamples, cyclesToShow, _visited
       );
     }
 
@@ -603,7 +618,7 @@ export function processSignalGraph(
       return processSignalGraph(
         nodes, connections,
         carrierConn.fromNodeId, carrierConn.fromPortId,
-        numSamples, cyclesToShow
+        numSamples, cyclesToShow, _visited
       );
     }
 
@@ -616,7 +631,7 @@ export function processSignalGraph(
       const inputSignal = processSignalGraph(
         nodes, connections,
         inputConn.fromNodeId, inputConn.fromPortId,
-        numSamples, cyclesToShow
+        numSamples, cyclesToShow, _visited
       );
       if (!inputSignal) return new Float32Array(numSamples);
 

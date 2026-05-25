@@ -258,17 +258,29 @@ export default function LabWorkbench() {
   const { state, dispatch, t } = useSignalGraph();
   const { addToast } = useToast();
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [measurementValues, setMeasurementValues] = useState<Record<string, Record<string, string>>>({});
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (!practicumId) return 1;
+    return loadPersistedState(practicumId)?.currentStep ?? 1;
+  });
+  const [measurementValues, setMeasurementValues] = useState<Record<string, Record<string, string>>>(() => {
+    if (!practicumId) return {};
+    return loadPersistedState(practicumId)?.measurements ?? {};
+  });
   const [gradingResult, setGradingResult] = useState<GradingResult | null>(null);
-  const [initialized, setInitialized] = useState(false);
+  const initializedRef = useRef(false);
 
   // ── Canvas State ──────────────────────────────────────────
   const [pan, setPan] = useState({ x: 40, y: 20 });
   const [zoom, setZoom] = useState(0.72);
-  const [widgetPositions, setWidgetPositions] = useState<Record<string, WidgetPosition>>({});
-  const [hiddenWidgets, setHiddenWidgets] = useState<Set<string>>(new Set());
-  const [minimizedWidgets, setMinimizedWidgets] = useState<Set<string>>(new Set());
+  const [widgetPositions, setWidgetPositions] = useState<Record<string, WidgetPosition>>(() =>
+    practicumId ? (loadCanvasLayout(practicumId)?.positions ?? {}) : {}
+  );
+  const [hiddenWidgets, setHiddenWidgets] = useState<Set<string>>(() =>
+    new Set(practicumId ? (loadCanvasLayout(practicumId)?.hidden ?? []) : [])
+  );
+  const [minimizedWidgets, setMinimizedWidgets] = useState<Set<string>>(() =>
+    new Set(practicumId ? (loadCanvasLayout(practicumId)?.minimized ?? []) : [])
+  );
   const [toolbarOpen, setToolbarOpen] = useState(true);
   const [toolbarTab, setToolbarTab] = useState<'tools' | 'view'>('tools');
   const [isSpacePanning, setIsSpacePanning] = useState(false);
@@ -281,10 +293,15 @@ export default function LabWorkbench() {
 
   const entry = practicumId ? practicumRegistry[practicumId] : null;
   const config = entry?.config ?? null;
-  const measurementRows = entry?.rows ?? [];
+  const measurementRows = useMemo(() => entry?.rows ?? [], [entry]);
 
   // Build widget metadata from config
   const widgetMetas = useMemo(() => config ? buildDefaultLayout(config) : [], [config]);
+
+  // ── Toolbar widget groups — hoisted above early return so hooks run unconditionally ──
+  const moduleWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'module'), [widgetMetas]);
+  const instrumentWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'instrument'), [widgetMetas]);
+  const panelWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'panel'), [widgetMetas]);
 
   // Initialize signal graph
   useEffect(() => {
@@ -324,36 +341,26 @@ export default function LabWorkbench() {
       dispatch({ type: 'SET_POWER', on: true });
       dispatch({ type: 'UPDATE_NODE_PARAMS', nodeId: 'psu', params: { enabled: true } });
     }
-    if (saved?.currentStep) setCurrentStep(saved.currentStep);
-    if (saved?.measurements) setMeasurementValues(saved.measurements);
     if (saved) addToast(t('Sesi sebelumnya dipulihkan', 'Previous session restored'), 'info');
 
-    // Load canvas layout
-    const canvasLayout = loadCanvasLayout(practicumId);
-    if (canvasLayout) {
-      setWidgetPositions(canvasLayout.positions);
-      setHiddenWidgets(new Set(canvasLayout.hidden));
-      setMinimizedWidgets(new Set(canvasLayout.minimized));
-    }
-
-    setInitialized(true);
+    initializedRef.current = true;
     return () => {
       dispatch({ type: 'RESET', state: { nodes: new Map(), connections: [], powerOn: false, language: state.language } });
-      setInitialized(false);
+      initializedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.id]);
 
   // Auto-save canvas layout
   useEffect(() => {
-    if (!practicumId || !initialized) return;
+    if (!practicumId || !initializedRef.current) return;
     saveCanvasLayout(
       practicumId,
       widgetPositions,
       [...hiddenWidgets],
       [...minimizedWidgets],
     );
-  }, [practicumId, initialized, widgetPositions, hiddenWidgets, minimizedWidgets]);
+  }, [practicumId, widgetPositions, hiddenWidgets, minimizedWidgets]);
 
   useWorkbenchPersistence(
     practicumId || '', state.powerOn, state.connections,
@@ -493,11 +500,17 @@ export default function LabWorkbench() {
       const cursorX = e.clientX - rect.left;
       const cursorY = e.clientY - rect.top;
       const factor = e.deltaY < 0 ? 1.1 : 0.9;
-      setZoom(prev => {
-        const newZoom = Math.min(Math.max(prev * factor, 0.2), 2.5);
-        const wx = (cursorX - pan.x) / prev;
-        const wy = (cursorY - pan.y) / prev;
-        setPan({ x: cursorX - wx * newZoom, y: cursorY - wy * newZoom });
+      // BUG-FIX: `pan` captured in the outer closure is stale when rapid wheel
+      // events fire before React flushes state updates. Use functional setPan
+      // inside the setZoom updater so both reads are from the same committed
+      // state snapshot, avoiding jittery zoom-to-cursor behavior.
+      setZoom(prevZoom => {
+        const newZoom = Math.min(Math.max(prevZoom * factor, 0.2), 2.5);
+        setPan(prevPan => {
+          const wx = (cursorX - prevPan.x) / prevZoom;
+          const wy = (cursorY - prevPan.y) / prevZoom;
+          return { x: cursorX - wx * newZoom, y: cursorY - wy * newZoom };
+        });
         return newZoom;
       });
       return;
@@ -514,7 +527,7 @@ export default function LabWorkbench() {
     } else {
       setPan(prev => ({ x: prev.x - e.deltaX * 0.8, y: prev.y - e.deltaY * 0.8 }));
     }
-  }, [pan]);
+  }, []);
 
   // Attach wheel listener with { passive: false } so preventDefault() actually fires
   useEffect(() => {
@@ -765,11 +778,7 @@ export default function LabWorkbench() {
     );
   }
 
-  // ── Toolbar widget groups ─────────────────────────────────
-  // Perf: memoize widget category filters to avoid recalculation every render
-  const moduleWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'module'), [widgetMetas]);
-  const instrumentWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'instrument'), [widgetMetas]);
-  const panelWidgets = useMemo(() => widgetMetas.filter(m => m.category === 'panel'), [widgetMetas]);
+  // ── Toolbar widget groups are declared above the early return ──
 
   return (
     <div className="workbench-page canvas-workbench-page">

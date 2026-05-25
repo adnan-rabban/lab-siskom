@@ -77,11 +77,12 @@ export function evaluateMeasurements(
           status = 'correct';
           pts = pointsPerField;
         } else if (field.expected !== undefined && field.expected !== null) {
-          // Explicit expected value
           const expected = field.expected;
           const tolerance = 20; // default 20% tolerance for inputs
           const deviation = Math.abs(studentVal - expected);
-          const toleranceAbs = (tolerance * expected) / 100;
+          const toleranceAbs = expected !== 0
+            ? (tolerance * Math.abs(expected)) / 100
+            : 0.01;
 
           if (deviation <= toleranceAbs * 0.5) {
             status = 'correct';
@@ -94,8 +95,6 @@ export function evaluateMeasurements(
             pts = Math.round(pointsPerField * 0.3);
           }
         } else {
-          // Fields like Emax/Emin don't have exact expected values
-          // They get points for being filled in with reasonable values
           const reasonable = studentVal > 0 && studentVal < 100;
           status = reasonable ? 'correct' : 'close';
           pts = reasonable ? pointsPerField : Math.round(pointsPerField * 0.5);
@@ -135,7 +134,9 @@ export function evaluateMeasurements(
 
         if (target && target.expectedValue !== undefined) {
           const deviation = Math.abs(computed - target.expectedValue);
-          const toleranceAbs = (target.tolerance || 10) * target.expectedValue / 100;
+          const toleranceAbs = target.expectedValue !== 0
+            ? (target.tolerance || 10) * Math.abs(target.expectedValue) / 100
+            : 0.01;
 
           let status: FieldResult['status'] = 'incorrect';
           let pts = 0;

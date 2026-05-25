@@ -5,7 +5,6 @@ import SevenSegmentDisplay from '../components/SevenSegment';
 import Terminal from '../components/Terminal';
 
 interface FrequencyCounterProps {
-  /** Node ID to measure frequency from */
   probeTargets?: { nodeId: string; label: string }[];
 }
 
@@ -23,17 +22,12 @@ export default function FrequencyCounter({ probeTargets = [] }: FrequencyCounter
   const [measuredFreq, setMeasuredFreq] = useState<number>(0);
   const intervalRef = useRef<number>(0);
 
-  // Adjust selectedTarget during render if it's invalid or empty
-  let adjustedTarget = selectedTarget;
-  if (!selectedTarget && probeTargets.length > 0) {
-    adjustedTarget = probeTargets[0].nodeId;
-  } else if (selectedTarget && !probeTargets.some(pt => pt.nodeId === selectedTarget)) {
-    adjustedTarget = probeTargets[0]?.nodeId ?? null;
-  }
-
-  if (adjustedTarget !== selectedTarget) {
-    setSelectedTarget(adjustedTarget);
-  }
+  const adjustedTarget = useMemo(() => {
+    if (!selectedTarget && probeTargets.length > 0) return probeTargets[0].nodeId;
+    if (selectedTarget && !probeTargets.some(pt => pt.nodeId === selectedTarget))
+      return probeTargets[0]?.nodeId ?? null;
+    return selectedTarget;
+  }, [selectedTarget, probeTargets]);
 
   const connectedInput = useMemo(
     () => state.connections.find(c => c.connected && c.toNodeId === 'freq-counter' && c.toPortId === 'input'),
@@ -129,10 +123,10 @@ export default function FrequencyCounter({ probeTargets = [] }: FrequencyCounter
             {!connectedInput && probeTargets.map(pt => (
               <span
                 key={pt.nodeId}
-                className={`probe-option ${selectedTarget === pt.nodeId ? 'selected' : ''}`}
+                className={`probe-option ${adjustedTarget === pt.nodeId ? 'selected' : ''}`}
                 onClick={() => setSelectedTarget(pt.nodeId)}
               >
-                {selectedTarget === pt.nodeId ? '●' : '○'} {pt.label}
+                {adjustedTarget === pt.nodeId ? '●' : '○'} {pt.label}
               </span>
             ))}
           </div>
