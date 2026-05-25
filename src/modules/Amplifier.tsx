@@ -27,7 +27,7 @@ export default function Amplifier({ nodeId }: AmplifierProps) {
 
   if (!node) return null;
 
-  const gain = node.params.gain || 0;
+  const gain = typeof node.params.gain === 'number' ? node.params.gain : 0;
 
   return (
     <div className={`module-panel scanline-overlay amplifier-module ${isOn ? 'powered-on' : 'powered-off'}`}>

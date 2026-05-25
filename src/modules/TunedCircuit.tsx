@@ -63,8 +63,8 @@ export default function TunedCircuit({ nodeId }: TunedCircuitProps) {
 
   if (!node) return null;
 
-  const tunedFreq = node.params.tunedFrequency || 455000;
-  const atten = node.params.attenuation || 0;
+  const tunedFreq = typeof node.params.tunedFrequency === 'number' ? node.params.tunedFrequency : 455000;
+  const atten = typeof node.params.attenuation === 'number' ? node.params.attenuation : 0;
 
   return (
     <div className={`module-panel scanline-overlay tuned-circuit-module ${isOn ? 'powered-on' : 'powered-off'}`}>

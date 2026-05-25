@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
+import { usePortConnected } from '../hooks/usePortConnected';
 import Knob from '../components/Knob';
 import ToggleSwitch from '../components/ToggleSwitch';
 import SevenSegmentDisplay from '../components/SevenSegment';
@@ -23,6 +24,10 @@ function frequencyUnit(hz: number): string {
   return 'Hz';
 }
 
+function isWaveform(value: unknown): value is WaveformType {
+  return value === 'sine' || value === 'square' || value === 'triangle' || value === 'sawtooth';
+}
+
 // Simple SVG waveform icons
 const WaveformIcon = ({ type }: { type: WaveformType }) => {
   const icons: Record<WaveformType, string> = {
@@ -44,14 +49,11 @@ const WaveformIcon = ({ type }: { type: WaveformType }) => {
 export default function FunctionGenerator({ nodeId, instanceLabel }: FunctionGeneratorProps) {
   const { state, dispatch, t } = useSignalGraph();
   const node = state.nodes.get(nodeId);
+  const isOutputConnected = usePortConnected(nodeId);
   const isOn = state.powerOn;
 
-  const [enabled, setEnabled] = useState(true);
-
-  // FEAT-03: Wire enabled toggle to signal engine
   const handleEnabledToggle = useCallback(
     (on: boolean) => {
-      setEnabled(on);
       dispatch({
         type: 'UPDATE_NODE_PARAMS',
         nodeId,
@@ -96,9 +98,10 @@ export default function FunctionGenerator({ nodeId, instanceLabel }: FunctionGen
 
   if (!node) return null;
 
-  const freq = node.params.frequency || 300;
-  const amp = node.params.amplitude || 1;
-  const wf = (node.params.waveform as WaveformType) || 'sine';
+  const enabled = node.params.enabled !== false;
+  const freq = typeof node.params.frequency === 'number' ? node.params.frequency : 300;
+  const amp = typeof node.params.amplitude === 'number' ? node.params.amplitude : 1;
+  const wf = isWaveform(node.params.waveform) ? node.params.waveform : 'sine';
 
   return (
     <div className={`instrument-panel function-generator ${!isOn ? 'powered-off' : ''}`}>
@@ -159,7 +162,12 @@ export default function FunctionGenerator({ nodeId, instanceLabel }: FunctionGen
       </div>
 
       <div className="instrument-controls">
-        <Terminal id={`${nodeId}-output`} label="OUTPUT" direction="output" connected={false} />
+        <Terminal
+          id={`${nodeId}-output`}
+          label="OUTPUT"
+          direction="output"
+          connected={isOutputConnected('output')}
+        />
       </div>
     </div>
   );

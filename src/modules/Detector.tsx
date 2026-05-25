@@ -39,8 +39,8 @@ export default function Detector({ nodeId }: DetectorProps) {
 
   if (!node) return null;
 
-  const decay = (node.params.decay as number) || 0.995;
-  const detectorType = (node.params.detectorType as string) || 'diode';
+  const decay = typeof node.params.decay === 'number' ? node.params.decay : 0.995;
+  const detectorType = typeof node.params.detectorType === 'string' ? node.params.detectorType : 'diode';
 
   return (
     <div className={`module-panel scanline-overlay detector-module ${isOn ? 'powered-on' : 'powered-off'}`}>

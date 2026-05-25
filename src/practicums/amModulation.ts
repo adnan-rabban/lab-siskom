@@ -152,7 +152,14 @@ export const amModulationConfig: PracticumConfig = {
       stepNumber: 4,
       instruction: 'Connect the output terminal of Signal Source PTE-011-01 to Amplifier PTE-011-07, Tuned Circuit PTE-011-04, oscilloscope, and function generator.',
       instructionId: 'Hubungkan terminal keluaran modul Signal Source PTE-011-01 dengan modul Amplifier PTE-011-07, Tuned Circuit PTE-011-04, osiloskop, function generator.',
-      requiredConnections: ['conn-sig-amp', 'conn-amp-tuned', 'conn-sig-ws-carrier'],
+      requiredConnections: [
+        'conn-sig-amp',
+        'conn-amp-tuned',
+        'conn-sig-ws-carrier',
+        'conn-funcgen-ws-mod',
+        'conn-ws-scope',
+        'conn-tuned-scope',
+      ],
     },
     {
       stepNumber: 5,

@@ -45,8 +45,8 @@ export default function SignalSource({ nodeId }: SignalSourceProps) {
 
   if (!node) return null;
 
-  const freq = node.params.frequency || 455000;
-  const atten = node.params.attenuation || 0;
+  const freq = typeof node.params.frequency === 'number' ? node.params.frequency : 455000;
+  const atten = typeof node.params.attenuation === 'number' ? node.params.attenuation : 0;
 
   return (
     <div className={`module-panel scanline-overlay signal-source-module ${isOn ? 'powered-on' : 'powered-off'}`}>

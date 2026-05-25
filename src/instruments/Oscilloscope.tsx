@@ -1,7 +1,7 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { useSignalGraph } from '../engine/SignalGraphContext';
-import { processSignalGraph } from '../engine/SignalEngine';
-import type { CouplingMode } from '../engine/types';
+import { processSignalGraph, inferOutputFrequency } from '../engine/SignalEngine';
+import type { Connection, CouplingMode } from '../engine/types';
 import Knob from '../components/Knob';
 import ToggleSwitch from '../components/ToggleSwitch';
 
@@ -59,7 +59,6 @@ interface ChannelState {
   coupling: CouplingMode;
   voltsDivIndex: number;
   verticalOffset: number;
-  probeTarget: string | null; // nodeId to probe
 }
 
 // Helpers
@@ -90,6 +89,14 @@ interface OscilloscopeProps {
   probeTargets?: { nodeId: string; portId: string; label: string }[];
 }
 
+function getConnectedScopeSource(connections: Connection[], channelPortId: 'ch1' | 'ch2'): Connection | undefined {
+  return connections.find(c =>
+    c.connected &&
+    c.toNodeId === 'oscilloscope' &&
+    c.toPortId === channelPortId
+  );
+}
+
 export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { state, t } = useSignalGraph();
@@ -102,7 +109,6 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     coupling: 'DC',
     voltsDivIndex: 9, // 1V
     verticalOffset: 0,
-    probeTarget: null,
   });
 
   const [ch2, setCh2] = useState<ChannelState>({
@@ -110,19 +116,22 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     coupling: 'DC',
     voltsDivIndex: 9,
     verticalOffset: 0,
-    probeTarget: null,
   });
 
   const [cursorMode, setCursorMode] = useState<'off' | 'time' | 'voltage'>('off');
   const [cursorPos, setCursorPos] = useState({ t1: 0.25, t2: 0.75, v1: 0.25, v2: 0.75 });
   const [draggingCursor, setDraggingCursor] = useState<keyof typeof cursorPos | null>(null);
 
-  // BUG-01 fix: Auto-select first probe target for CH1 when available
-  useEffect(() => {
-    if (probeTargets.length > 0 && ch1.probeTarget === null) {
-      setCh1(prev => ({ ...prev, probeTarget: probeTargets[0].nodeId }));
-    }
-  }, [probeTargets]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ch1Connection = useMemo(() => getConnectedScopeSource(state.connections, 'ch1'), [state.connections]);
+  const ch2Connection = useMemo(() => getConnectedScopeSource(state.connections, 'ch2'), [state.connections]);
+
+  const probeLabel = useCallback(
+    (nodeId?: string) => {
+      if (!nodeId) return t('Belum ada kabel', 'No cable connected');
+      return probeTargets.find(pt => pt.nodeId === nodeId)?.label ?? nodeId;
+    },
+    [probeTargets, t]
+  );
 
   const timePerDiv = TIME_DIV_STEPS[timeDivIndex].value;
   const totalTime = timePerDiv * GRID_DIVS_X; // total time window
@@ -213,10 +222,11 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
     // --- Render Channels ---
     const renderChannel = (
       channel: ChannelState,
+      connection: Connection | undefined,
       color: string,
       glowColor: string
     ) => {
-      if (!channel.enabled || !channel.probeTarget) return;
+      if (!channel.enabled || !connection) return;
 
       // BUG-02 fix: GND coupling — show flat line
       if (channel.coupling === 'GND') {
@@ -234,20 +244,22 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
         return;
       }
 
-      // Find the target node to get its frequency for cycle calculation
-      const targetNode = state.nodes.get(channel.probeTarget);
+      // Find the source node that is physically connected to this scope channel.
+      const targetNode = state.nodes.get(connection.fromNodeId);
       if (!targetNode) return;
 
-      // Calculate how many cycles of the carrier frequency fit in the time window
-      const signalFreq = targetNode.params.frequency || 1000;
-      const cyclesToShow = totalTime * signalFreq;
+      // Calculate how many cycles of the measured source fit in the time window.
+      // Derived nodes (detector/amplifier/tuned circuit) do not always own a
+      // direct frequency parameter, so infer it from the active graph.
+      const signalFreq = inferOutputFrequency(state.nodes, state.connections, connection.fromNodeId) || 1000;
+      const cyclesToShow = Math.max(totalTime * signalFreq, 0.001);
 
-      // Generate signal data
+      // Generate signal data from the physically connected source port.
       let signal = processSignalGraph(
         state.nodes,
         state.connections,
-        channel.probeTarget,
-        'output',
+        connection.fromNodeId,
+        connection.fromPortId,
         RENDER_SAMPLES,
         cyclesToShow
       );
@@ -299,8 +311,8 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
       ctx.shadowBlur = 0;
     };
 
-    renderChannel(ch1, '#4ADE80', 'rgba(74, 222, 128, 0.5)');
-    renderChannel(ch2, '#FF5C00', 'rgba(255, 92, 0, 0.5)');
+    renderChannel(ch1, ch1Connection, '#4ADE80', 'rgba(74, 222, 128, 0.5)');
+    renderChannel(ch2, ch2Connection, '#FF5C00', 'rgba(255, 92, 0, 0.5)');
 
     // --- Channel labels ---
     ctx.font = '10px "JetBrains Mono", monospace';
@@ -356,7 +368,7 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
 
       ctx.setLineDash([]);
     }
-  }, [state, ch1, ch2, timeDivIndex, totalTime, running, cursorMode, cursorPos]);
+  }, [state, ch1, ch2, ch1Connection, ch2Connection, timeDivIndex, totalTime, running, cursorMode, cursorPos]);
 
   // Animation loop — with Page Visibility API for background tab efficiency
   useEffect(() => {
@@ -548,18 +560,12 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
                 </span>
               ))}
             </div>
-            {/* Probe selector */}
+            {/* Probe status follows the physical cable connected to CH1 */}
             <div className="probe-selector">
               <span className="text-xs text-muted">Probe:</span>
-              {probeTargets.map(pt => (
-                <span
-                  key={pt.nodeId}
-                  className={`probe-option ${ch1.probeTarget === pt.nodeId ? 'selected' : ''}`}
-                  onClick={() => setCh1(prev => ({ ...prev, probeTarget: pt.nodeId }))}
-                >
-                  {ch1.probeTarget === pt.nodeId ? '●' : '○'} {pt.label}
-                </span>
-              ))}
+              <span className={`probe-option ${ch1Connection ? 'selected' : ''}`}>
+                {ch1Connection ? '●' : '○'} {probeLabel(ch1Connection?.fromNodeId)}
+              </span>
             </div>
           </div>
 
@@ -605,15 +611,9 @@ export default function Oscilloscope({ probeTargets = [] }: OscilloscopeProps) {
             </div>
             <div className="probe-selector">
               <span className="text-xs text-muted">Probe:</span>
-              {probeTargets.map(pt => (
-                <span
-                  key={pt.nodeId}
-                  className={`probe-option ${ch2.probeTarget === pt.nodeId ? 'selected' : ''}`}
-                  onClick={() => setCh2(prev => ({ ...prev, probeTarget: pt.nodeId }))}
-                >
-                  {ch2.probeTarget === pt.nodeId ? '●' : '○'} {pt.label}
-                </span>
-              ))}
+              <span className={`probe-option ${ch2Connection ? 'selected' : ''}`}>
+                {ch2Connection ? '●' : '○'} {probeLabel(ch2Connection?.fromNodeId)}
+              </span>
             </div>
           </div>
 

@@ -67,7 +67,7 @@ export function generateAMSignal(
   const output = new Float32Array(numSamples);
 
   // The ratio of modulating frequency to carrier frequency
-  const freqRatio = modFreq / carrierFreq;
+  const freqRatio = modFreq / (carrierFreq > 0 ? carrierFreq : 1);
 
   for (let i = 0; i < numSamples; i++) {
     // Normalized time: 0 to cyclesToShow carrier cycles
@@ -126,8 +126,10 @@ export function generateFMSignal(
   cyclesToShow: number
 ): Float32Array {
   const output = new Float32Array(numSamples);
-  const freqRatio = modFreq / carrierFreq;
-  const beta = freqDeviation / modFreq;
+  const safeCarrierFreq = carrierFreq > 0 ? carrierFreq : 1;
+  const safeModFreq = modFreq > 0 ? modFreq : 1;
+  const freqRatio = safeModFreq / safeCarrierFreq;
+  const beta = freqDeviation / safeModFreq;
 
   for (let i = 0; i < numSamples; i++) {
     const t = (i / numSamples) * cyclesToShow;
@@ -329,14 +331,90 @@ export function estimateFrequency(
   return realFrequency;
 }
 
-// ============================================================
-// Graph Processor
-// ============================================================
+// Graph Inspection Helpers
+function numericParam(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
 
-/**
- * Process the signal graph: given a set of nodes and connections,
- * compute the output signal for a specific port.
- */
+function waveformParam(value: unknown, fallback: WaveformType): WaveformType {
+  return value === 'sine' || value === 'square' || value === 'triangle' || value === 'sawtooth'
+    ? value
+    : fallback;
+}
+
+function firstInputConnection(
+  connections: Connection[],
+  nodeId: string,
+  portId?: string
+): Connection | undefined {
+  return connections.find(c =>
+    c.connected &&
+    c.toNodeId === nodeId &&
+    (portId ? c.toPortId === portId : true)
+  );
+}
+
+function modulationInputFrequency(
+  nodes: Map<string, SignalNode>,
+  connections: Connection[],
+  nodeId: string,
+  visited: Set<string>
+): number {
+  const modConn = firstInputConnection(connections, nodeId, 'mod-in');
+  return modConn ? inferOutputFrequency(nodes, connections, modConn.fromNodeId, visited) : 0;
+}
+
+export function inferOutputFrequency(
+  nodes: Map<string, SignalNode>,
+  connections: Connection[],
+  nodeId: string,
+  visited: Set<string> = new Set()
+): number {
+  if (visited.has(nodeId)) return 0;
+  visited.add(nodeId);
+
+  const node = nodes.get(nodeId);
+  if (!node) return 0;
+
+  switch (node.moduleType) {
+    case 'signal-source':
+      return numericParam(node.params.frequency, 455000);
+
+    case 'function-generator':
+      return node.params.enabled === false ? 0 : numericParam(node.params.frequency, 300);
+
+    case 'waveform-synthesis':
+    case 'fm-modulator': {
+      const carrierConn = firstInputConnection(connections, nodeId, 'carrier-in');
+      if (carrierConn) return inferOutputFrequency(nodes, connections, carrierConn.fromNodeId, visited);
+      return modulationInputFrequency(nodes, connections, nodeId, visited);
+    }
+
+    case 'detector': {
+      const inputConn = firstInputConnection(connections, nodeId, 'input');
+      if (!inputConn) return 0;
+
+      const upstream = nodes.get(inputConn.fromNodeId);
+      if (upstream?.moduleType === 'waveform-synthesis' || upstream?.moduleType === 'fm-modulator') {
+        const modFreq = modulationInputFrequency(nodes, connections, upstream.id, visited);
+        if (modFreq > 0) return modFreq;
+      }
+
+      return inferOutputFrequency(nodes, connections, inputConn.fromNodeId, visited);
+    }
+
+    case 'amplifier':
+    case 'tuned-circuit': {
+      const inputConn = firstInputConnection(connections, nodeId, 'input');
+      return inputConn ? inferOutputFrequency(nodes, connections, inputConn.fromNodeId, visited) : 0;
+    }
+
+    default:
+      return numericParam(node.params.frequency, 0);
+  }
+}
+
+// Graph Processor
 export function processSignalGraph(
   nodes: Map<string, SignalNode>,
   connections: Connection[],
@@ -359,10 +437,10 @@ export function processSignalGraph(
 
   switch (node.moduleType) {
     case 'signal-source': {
-      const freq = node.params.frequency || 455000;
-      const amp = node.params.amplitude || 1;
-      const wf = node.params.waveform || 'sine';
-      const atten = node.params.attenuation || 0;
+      const freq = numericParam(node.params.frequency, 455000);
+      const amp = numericParam(node.params.amplitude, 1);
+      const wf = waveformParam(node.params.waveform, 'sine');
+      const atten = numericParam(node.params.attenuation, 0);
 
       // Check if there's a modulating signal connected
       const modConnection = activeConnections.find(
@@ -373,9 +451,9 @@ export function processSignalGraph(
         // Get the modulating signal's parameters
         const modNode = nodes.get(modConnection.fromNodeId);
         if (modNode) {
-          const modFreq = modNode.params.frequency || 300;
-          const modIndex = node.params.modulationIndex || 0.5;
-          const modWf = modNode.params.waveform || 'sine';
+          const modFreq = numericParam(modNode.params.frequency, 300);
+          const modIndex = numericParam(node.params.modulationIndex, 0.5);
+          const modWf = waveformParam(modNode.params.waveform, 'sine');
 
           const signal = generateAMSignal(
             freq, amp, wf, modFreq, modIndex, modWf,
@@ -396,9 +474,9 @@ export function processSignalGraph(
         return new Float32Array(numSamples);
       }
 
-      const amp = node.params.amplitude || 1;
-      const wf = node.params.waveform || 'sine';
-      const dc = node.params.dcOffset || 0;
+      const amp = numericParam(node.params.amplitude, 1);
+      const wf = waveformParam(node.params.waveform, 'sine');
+      const dc = numericParam(node.params.dcOffset, 0);
 
       // For function generator, cyclesToShow is based on its own frequency
       const signal = generateBaseSignal(amp, wf, numSamples, cyclesToShow);
@@ -424,7 +502,7 @@ export function processSignalGraph(
       );
       if (!inputSignal) return new Float32Array(numSamples);
 
-      const gain = node.params.gain || 0;
+      const gain = numericParam(node.params.gain, 0);
       return applyGain(inputSignal, gain);
     }
 
@@ -442,10 +520,10 @@ export function processSignalGraph(
       if (!inputSignal) return new Float32Array(numSamples);
 
       const inputNode = nodes.get(inputConn.fromNodeId);
-      const signalFreq = inputNode?.params.frequency || 455000;
-      const tunedFreq = node.params.tunedFrequency || 455000;
-      const bw = node.params.bandwidth || 10000;
-      const atten = node.params.attenuation || 0;
+      const signalFreq = inputNode ? inferOutputFrequency(nodes, connections, inputNode.id) || 455000 : 455000;
+      const tunedFreq = numericParam(node.params.tunedFrequency, 455000);
+      const bw = numericParam(node.params.bandwidth, 10000);
+      const atten = numericParam(node.params.attenuation, 0);
 
       return applyTunedCircuit(inputSignal, signalFreq, tunedFreq, bw, atten);
     }
@@ -464,16 +542,16 @@ export function processSignalGraph(
       const carrierNode = nodes.get(carrierConn.fromNodeId);
       if (!carrierNode) return new Float32Array(numSamples);
 
-      const carrierFreq = carrierNode.params.frequency || 455000;
-      const carrierAmp = carrierNode.params.amplitude || 1;
-      const carrierWf = carrierNode.params.waveform || 'sine';
+      const carrierFreq = numericParam(carrierNode.params.frequency, 455000);
+      const carrierAmp = numericParam(carrierNode.params.amplitude, 1);
+      const carrierWf = waveformParam(carrierNode.params.waveform, 'sine');
 
       if (modConn) {
         const modNode = nodes.get(modConn.fromNodeId);
         if (modNode) {
-          const modFreq = modNode.params.frequency || 300;
-          const modIndex = node.params.modulationIndex ?? 0.5;
-          const modWf = modNode.params.waveform || 'sine';
+          const modFreq = numericParam(modNode.params.frequency, 300);
+          const modIndex = numericParam(node.params.modulationIndex, 0.5);
+          const modWf = waveformParam(modNode.params.waveform, 'sine');
 
           return generateAMSignal(
             carrierFreq, carrierAmp, carrierWf,
@@ -504,15 +582,15 @@ export function processSignalGraph(
       const carrierNode = nodes.get(carrierConn.fromNodeId);
       if (!carrierNode) return new Float32Array(numSamples);
 
-      const carrierFreq = carrierNode.params.frequency || 455000;
-      const carrierAmp = carrierNode.params.amplitude || 1;
+      const carrierFreq = numericParam(carrierNode.params.frequency, 455000);
+      const carrierAmp = numericParam(carrierNode.params.amplitude, 1);
 
       if (modConn) {
         const modNode = nodes.get(modConn.fromNodeId);
         if (modNode) {
-          const modFreq = modNode.params.frequency || 300;
-          const freqDeviation = node.params.freqDeviation ?? 75000;
-          const modWf = modNode.params.waveform || 'sine';
+          const modFreq = numericParam(modNode.params.frequency, 300);
+          const freqDeviation = numericParam(node.params.freqDeviation, 75000);
+          const modWf = waveformParam(modNode.params.waveform, 'sine');
 
           return generateFMSignal(
             carrierFreq, carrierAmp,
@@ -548,7 +626,7 @@ export function processSignalGraph(
       if (detType === 'product') {
         // Product detector: needs carrier frequency from upstream
         const inputNode = nodes.get(inputConn.fromNodeId);
-        const carrierFreq = inputNode?.params.frequency || 455000;
+        const carrierFreq = inputNode ? inferOutputFrequency(nodes, connections, inputNode.id) || 455000 : 455000;
         return productDetect(inputSignal, carrierFreq, cyclesToShow);
       }
 
