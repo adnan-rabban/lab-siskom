@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import '../index.css';
-import '../components/pages.css';
+
 
 export const metadata: Metadata = {
   title: 'Laboratorium Teknik Virtual — PUDAK Scientific Simulator',

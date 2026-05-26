@@ -29,3 +29,6 @@ dist-ssr
 # Next.js build and export outputs
 /.next/
 /out/
+
+# TypeScript
+next-env.d.ts
