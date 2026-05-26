@@ -279,10 +279,6 @@ export function measureAMEnvelope(signal: Float32Array): { eMax: number; eMin: n
     }
   }
 
-  // BUG-FIX: Math.max(...peaks) / Math.min(...peaks) uses the spread operator
-  // to pass all peaks as function arguments. JavaScript engines cap the number of
-  // function arguments, so for signals with many peaks this throws a
-  // "Maximum call stack size exceeded" RangeError. Use reduce instead.
   let eMax = 0;
   let eMin = Infinity;
   for (let i = 0; i < peaks.length; i++) {
@@ -402,10 +398,25 @@ export function inferOutputFrequency(
       const inputConn = firstInputConnection(connections, nodeId, 'input');
       if (!inputConn) return 0;
 
-      const upstream = nodes.get(inputConn.fromNodeId);
-      if (upstream?.moduleType === 'waveform-synthesis' || upstream?.moduleType === 'fm-modulator') {
-        const modFreq = modulationInputFrequency(nodes, connections, upstream.id, visited);
-        if (modFreq > 0) return modFreq;
+      // Traverse upstream to find a node with a modulation input connection
+      let currentId: string | undefined = inputConn.fromNodeId;
+      const seen = new Set<string>([nodeId]);
+      while (currentId && !seen.has(currentId)) {
+        seen.add(currentId);
+        const currentNode = nodes.get(currentId);
+        if (!currentNode) break;
+
+        // Check if this node has a mod-in connection
+        const modConn = firstInputConnection(connections, currentId, 'mod-in');
+        if (modConn) {
+          const modFreq = inferOutputFrequency(nodes, connections, modConn.fromNodeId, visited);
+          if (modFreq > 0) return modFreq;
+        }
+
+        // Move upstream
+        const upConn: Connection | undefined = firstInputConnection(connections, currentId, 'input') ||
+                       firstInputConnection(connections, currentId, 'carrier-in');
+        currentId = upConn?.fromNodeId;
       }
 
       return inferOutputFrequency(nodes, connections, inputConn.fromNodeId, visited);
@@ -430,11 +441,8 @@ export function processSignalGraph(
   _targetPortId: string,
   numSamples: number = 1024,
   cyclesToShow: number = 10,
-  // BUG-FIX: visited set prevents infinite recursion if the connection graph
-  // ever contains a cycle (e.g. corrupted persisted state).
   _visited: Set<string> = new Set()
 ): Float32Array | null {
-  // Cycle guard — return silence instead of stack-overflowing
   if (_visited.has(targetNodeId)) return new Float32Array(numSamples);
   _visited.add(targetNodeId);
 
@@ -467,14 +475,30 @@ export function processSignalGraph(
         const modNode = nodes.get(modConnection.fromNodeId);
         if (modNode) {
           const modFreq = numericParam(modNode.params.frequency, 300);
-          const modIndex = numericParam(node.params.modulationIndex, 0.5);
           const modWf = waveformParam(modNode.params.waveform, 'sine');
 
-          const signal = generateAMSignal(
-            freq, amp, wf, modFreq, modIndex, modWf,
-            numSamples, cyclesToShow
-          );
-          return applyGain(signal, atten);
+          if (node.params.freqDeviation !== undefined) {
+            // FM modulation
+            const freqDeviation = numericParam(node.params.freqDeviation, 75000);
+            const modAmp = numericParam(modNode.params.amplitude, 1.0);
+            const actualDeviation = freqDeviation * modAmp;
+
+            const signal = generateFMSignal(
+              freq, amp, modFreq, actualDeviation, modWf,
+              numSamples, cyclesToShow
+            );
+            return applyGain(signal, atten);
+          } else {
+            // AM modulation
+            const modAmp = numericParam(modNode.params.amplitude, 1.0);
+            const modIndex = numericParam(node.params.modulationIndex, 1.0) * modAmp;
+
+            const signal = generateAMSignal(
+              freq, amp, wf, modFreq, modIndex, modWf,
+              numSamples, cyclesToShow
+            );
+            return applyGain(signal, atten);
+          }
         }
       }
 

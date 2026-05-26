@@ -47,6 +47,7 @@ export default function SignalSource({ nodeId }: SignalSourceProps) {
 
   const freq = typeof node.params.frequency === 'number' ? node.params.frequency : 455000;
   const atten = typeof node.params.attenuation === 'number' ? node.params.attenuation : 0;
+  const freqDeviation = typeof node.params.freqDeviation === 'number' ? node.params.freqDeviation : undefined;
 
   return (
     <div className={`module-panel scanline-overlay signal-source-module ${isOn ? 'powered-on' : 'powered-off'}`}>
@@ -67,6 +68,27 @@ export default function SignalSource({ nodeId }: SignalSourceProps) {
             formatValue={(v) => formatFrequency(v * 1000)}
           />
         </div>
+        {freqDeviation !== undefined && (
+          <div className="module-control-row">
+            <span className="module-control-label">{t('Deviasi FM', 'FM Dev')}</span>
+            <Knob
+              label="Hz"
+              value={freqDeviation}
+              min={0}
+              max={150000}
+              step={1000}
+              size="sm"
+              onChange={(value) => {
+                dispatch({
+                  type: 'UPDATE_NODE_PARAMS',
+                  nodeId,
+                  params: { freqDeviation: value },
+                });
+              }}
+              formatValue={(v) => `${(v / 1000).toFixed(0)} kHz`}
+            />
+          </div>
+        )}
         <div className="module-control-row">
           <span className="module-control-label">{t('Pelemahan', 'Atten')}</span>
           <Knob

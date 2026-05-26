@@ -29,13 +29,6 @@ export const fmModulationConfig: PracticumConfig = {
         amplitude: 1,
         waveform: 'sine',
         attenuation: 0,
-      },
-    },
-    {
-      moduleType: 'fm-modulator',
-      nodeId: 'fm-modulator',
-      label: 'PTE-011-10',
-      initialParams: {
         freqDeviation: 75000,
       },
     },
@@ -69,22 +62,15 @@ export const fmModulationConfig: PracticumConfig = {
       toPortId: 'power-in',
     },
     {
-      id: 'conn-sig-fm-carrier',
-      fromNodeId: 'signal-source',
-      fromPortId: 'output',
-      toNodeId: 'fm-modulator',
-      toPortId: 'carrier-in',
-    },
-    {
-      id: 'conn-funcgen-fm-mod',
+      id: 'conn-funcgen-sig-mod',
       fromNodeId: 'func-gen-1',
       fromPortId: 'output',
-      toNodeId: 'fm-modulator',
+      toNodeId: 'signal-source',
       toPortId: 'mod-in',
     },
     {
-      id: 'conn-fm-scope-ch1',
-      fromNodeId: 'fm-modulator',
+      id: 'conn-sig-scope-ch1',
+      fromNodeId: 'signal-source',
       fromPortId: 'output',
       toNodeId: 'oscilloscope',
       toPortId: 'ch1',
@@ -101,27 +87,27 @@ export const fmModulationConfig: PracticumConfig = {
   procedure: [
     {
       stepNumber: 1,
-      instruction: 'Install Signal Source PTE-011-01, Power Supply PTE-011-17, and FM Modulator PTE-011-10 on the panel frame.',
-      instructionId: 'Pasang modul Signal Source PTE-011-01, Power Supply PTE-011-17, dan FM Modulator PTE-011-10 pada rangka panel.',
+      instruction: 'Install Signal Source PTE-011-01 and Power Supply PTE-011-17 on the panel frame.',
+      instructionId: 'Pasang modul Signal Source PTE-011-01 dan Power Supply PTE-011-17 pada rangka panel.',
       requiredConnections: ['conn-psu-signal'],
     },
     {
       stepNumber: 2,
-      instruction: 'Connect the Signal Source output to the FM Modulator carrier input.',
-      instructionId: 'Hubungkan keluaran Signal Source ke masukan carrier FM Modulator.',
-      requiredConnections: ['conn-sig-fm-carrier'],
+      instruction: 'Connect the Function Generator to the Signal Source modulation input (MOD IN).',
+      instructionId: 'Hubungkan Function Generator ke masukan modulasi (MOD IN) modul Signal Source.',
+      requiredConnections: ['conn-funcgen-sig-mod'],
     },
     {
       stepNumber: 3,
-      instruction: 'Connect the Function Generator to the FM Modulator modulation input.',
-      instructionId: 'Hubungkan Function Generator ke masukan modulasi FM Modulator.',
-      requiredConnections: ['conn-funcgen-fm-mod'],
+      instruction: 'Connect the Signal Source output to the oscilloscope CH1.',
+      instructionId: 'Hubungkan keluaran Signal Source ke osiloskop CH1.',
+      requiredConnections: ['conn-sig-scope-ch1'],
     },
     {
       stepNumber: 4,
-      instruction: 'Connect the oscilloscope CH1 to the FM Modulator output and CH2 to the Function Generator output.',
-      instructionId: 'Hubungkan osiloskop CH1 ke keluaran FM Modulator dan CH2 ke keluaran Function Generator.',
-      requiredConnections: ['conn-fm-scope-ch1', 'conn-funcgen-scope-ch2'],
+      instruction: 'Connect the Function Generator output to the oscilloscope CH2.',
+      instructionId: 'Hubungkan keluaran Function Generator ke osiloskop CH2.',
+      requiredConnections: ['conn-funcgen-scope-ch2'],
     },
     {
       stepNumber: 5,
@@ -133,10 +119,10 @@ export const fmModulationConfig: PracticumConfig = {
     },
     {
       stepNumber: 6,
-      instruction: 'Set the Frequency Deviation to 75 kHz. Observe the FM waveform on CH1 relative to the modulating signal on CH2.',
-      instructionId: 'Atur Deviasi Frekuensi ke 75 kHz. Amati gelombang FM pada CH1 relatif terhadap sinyal pemodulasi pada CH2.',
+      instruction: 'Set the Frequency Deviation of the Signal Source to 75 kHz. Observe the FM waveform on CH1 relative to the modulating signal on CH2.',
+      instructionId: 'Atur Deviasi Frekuensi pada Signal Source ke 75 kHz. Amati gelombang FM pada CH1 relatif terhadap sinyal pemodulasi pada CH2.',
       paramChanges: [
-        { nodeId: 'fm-modulator', params: { freqDeviation: 75000 } },
+        { nodeId: 'signal-source', params: { freqDeviation: 75000 } },
       ],
       observation: 'The FM signal should compress (higher frequency) during the positive half-cycle of the modulating signal and expand (lower frequency) during the negative half-cycle.',
       observationId: 'Sinyal FM akan merapat (frekuensi lebih tinggi) pada setengah siklus positif sinyal pemodulasi dan merenggang (frekuensi lebih rendah) pada setengah siklus negatif.',
@@ -148,10 +134,10 @@ export const fmModulationConfig: PracticumConfig = {
     },
     {
       stepNumber: 8,
-      instruction: 'Adjust the Frequency Deviation to 25 kHz. Observe the changes in the density of the FM signal.',
-      instructionId: 'Ubah Deviasi Frekuensi menjadi 25 kHz. Amati perubahan kerapatan sinyal FM.',
+      instruction: 'Adjust the Frequency Deviation of the Signal Source to 25 kHz. Observe the changes in the density of the FM signal.',
+      instructionId: 'Ubah Deviasi Frekuensi pada Signal Source menjadi 25 kHz. Amati perubahan kerapatan sinyal FM.',
       paramChanges: [
-        { nodeId: 'fm-modulator', params: { freqDeviation: 25000 } },
+        { nodeId: 'signal-source', params: { freqDeviation: 25000 } },
       ],
     },
     {

@@ -50,14 +50,6 @@ export const amModulationConfig: PracticumConfig = {
         attenuation: 0,
       },
     },
-    {
-      moduleType: 'waveform-synthesis',
-      nodeId: 'waveform-synthesis',
-      label: 'PTE-011-08',
-      initialParams: {
-        modulationIndex: 0.5,
-      },
-    },
   ],
 
   requiredInstruments: [
@@ -95,17 +87,10 @@ export const amModulationConfig: PracticumConfig = {
       toPortId: 'input',
     },
     {
-      id: 'conn-sig-ws-carrier',
-      fromNodeId: 'signal-source',
-      fromPortId: 'output',
-      toNodeId: 'waveform-synthesis',
-      toPortId: 'carrier-in',
-    },
-    {
-      id: 'conn-funcgen-ws-mod',
+      id: 'conn-funcgen-sig-mod',
       fromNodeId: 'func-gen-1',
       fromPortId: 'output',
-      toNodeId: 'waveform-synthesis',
+      toNodeId: 'signal-source',
       toPortId: 'mod-in',
     },
     {
@@ -116,8 +101,8 @@ export const amModulationConfig: PracticumConfig = {
       toPortId: 'input',
     },
     {
-      id: 'conn-ws-scope',
-      fromNodeId: 'waveform-synthesis',
+      id: 'conn-sig-scope-ch1',
+      fromNodeId: 'signal-source',
       fromPortId: 'output',
       toNodeId: 'oscilloscope',
       toPortId: 'ch1',
@@ -155,9 +140,8 @@ export const amModulationConfig: PracticumConfig = {
       requiredConnections: [
         'conn-sig-amp',
         'conn-amp-tuned',
-        'conn-sig-ws-carrier',
-        'conn-funcgen-ws-mod',
-        'conn-ws-scope',
+        'conn-funcgen-sig-mod',
+        'conn-sig-scope-ch1',
         'conn-tuned-scope',
       ],
     },
