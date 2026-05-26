@@ -51,9 +51,9 @@ export default function ThemeToggler() {
   }, [theme]);
 
   const themeOptions = [
-    { value: 'light', label: 'Terang', icon: Sun, transform: 'translateX(0px)' },
-    { value: 'system', label: 'Sistem', icon: Monitor, transform: 'translateX(32px)' },
-    { value: 'dark', label: 'Gelap', icon: Moon, transform: 'translateX(64px)' },
+    { value: 'system', label: 'Sistem', icon: Monitor, transform: 'translateX(0px)' },
+    { value: 'dark', label: 'Gelap', icon: Moon, transform: 'translateX(32px)' },
+    { value: 'light', label: 'Terang', icon: Sun, transform: 'translateX(64px)' },
   ] as const;
 
   const activeOption = themeOptions.find((opt) => opt.value === theme);
