@@ -552,6 +552,23 @@ export default function LabWorkbench() {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [widgetPositions]);
 
+  // ── Zoom With Center ──────────────────────────────────────
+  const adjustZoomWithCenter = useCallback((factor: number) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    const centerX = rect ? rect.width / 2 : window.innerWidth / 2;
+    const centerY = rect ? rect.height / 2 : window.innerHeight / 2;
+
+    setZoom(prevZoom => {
+      const newZoom = Math.min(Math.max(prevZoom * factor, 0.2), 2.5);
+      setPan(prevPan => {
+        const wx = (centerX - prevPan.x) / prevZoom;
+        const wy = (centerY - prevPan.y) / prevZoom;
+        return { x: centerX - wx * newZoom, y: centerY - wy * newZoom };
+      });
+      return newZoom;
+    });
+  }, []);
+
   // ── Fit & Reset ───────────────────────────────────────────
   const handleFitToScreen = useCallback(() => {
     const visibleMetas = widgetMetas.filter(m => !hiddenWidgets.has(m.id));
@@ -591,11 +608,11 @@ export default function LabWorkbench() {
 
       switch (e.key) {
         case '+': case '=':
-          setZoom(z => Math.min(z * 1.15, 2.5));
+          adjustZoomWithCenter(1.15);
           e.preventDefault();
           break;
         case '-':
-          setZoom(z => Math.max(z / 1.15, 0.2));
+          adjustZoomWithCenter(1 / 1.15);
           e.preventDefault();
           break;
         case '0':
@@ -646,7 +663,7 @@ export default function LabWorkbench() {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [handleFitToScreen]);
+  }, [handleFitToScreen, adjustZoomWithCenter]);
 
   const handleResetLayout = useCallback(() => {
     if (!practicumId) return;
@@ -912,9 +929,9 @@ export default function LabWorkbench() {
                   <div className="canvas-tool-group">
                     <div className="canvas-tool-group-label"><ZoomIn size={13} /> {t('Zoom', 'Zoom')}</div>
                     <div className="canvas-zoom-controls">
-                      <button className="canvas-zoom-btn" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
+                      <button className="canvas-zoom-btn" onClick={() => adjustZoomWithCenter(1.2)}>+</button>
                       <span className="canvas-zoom-label">{Math.round(zoom * 100)}%</span>
-                      <button className="canvas-zoom-btn" onClick={() => setZoom(z => Math.max(z / 1.2, 0.2))}>−</button>
+                      <button className="canvas-zoom-btn" onClick={() => adjustZoomWithCenter(1 / 1.2)}>−</button>
                     </div>
                     <div className="canvas-view-btns">
                       <button className="canvas-view-btn" onClick={() => { setZoom(1); setPan({ x: 40, y: 20 }); }}>100%</button>
@@ -1078,7 +1095,7 @@ export default function LabWorkbench() {
 
       {/* ── Bottom Navigation Bar (at root level, outside canvas-layout to avoid pointer event capture) ── */}
         <div className="canvas-nav-bar">
-          <button id="nav-zoom-out" className="canvas-nav-btn" title="Zoom Out (−)" onClick={() => setZoom(z => Math.max(z / 1.2, 0.2))}>−</button>
+          <button id="nav-zoom-out" className="canvas-nav-btn" title="Zoom Out (−)" onClick={() => adjustZoomWithCenter(1 / 1.2)}>−</button>
           <span
             id="nav-zoom-label"
             className="canvas-nav-zoom-label"
@@ -1087,7 +1104,7 @@ export default function LabWorkbench() {
           >
             {Math.round(zoom * 100)}%
           </span>
-          <button id="nav-zoom-in" className="canvas-nav-btn" title="Zoom In (+)" onClick={() => setZoom(z => Math.min(z * 1.2, 2.5))}>+</button>
+          <button id="nav-zoom-in" className="canvas-nav-btn" title="Zoom In (+)" onClick={() => adjustZoomWithCenter(1.2)}>+</button>
           <div style={{ width: 1, height: 16, background: 'var(--border-medium)', margin: '0 2px' }} />
           <button id="nav-fit-screen" className="canvas-nav-btn" title={t('Sesuaikan Layar (F)', 'Fit Screen (F)')} onClick={handleFitToScreen}><Maximize size={12} /></button>
           <button id="nav-reset-view" className="canvas-nav-btn" title={t('Reset Tampilan (Home)', 'Reset View (Home)')} onClick={() => { setZoom(0.72); setPan({ x: 40, y: 20 }); }}><Home size={12} /></button>
