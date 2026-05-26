@@ -139,6 +139,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  background: #0C0C0C;
 }
 
 body {
@@ -150,6 +151,12 @@ body {
   background: var(--bg-primary);
   min-height: 100vh;
   overflow-x: hidden;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+body.loaded {
+  opacity: 1;
 }
 
 /* Minimal scrollbar — Mono style */
