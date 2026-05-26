@@ -1,18 +1,55 @@
-import { useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
 import { Zap } from 'lucide-react';
-import type { PracticumConfig } from '../engine/types';
-import { amModulationConfig } from '../practicums/amModulation';
-import { demodulationConfig } from '../practicums/demodulation';
-import { fmModulationConfig } from '../practicums/fmModulation';
+
+interface StaticPracticum {
+  id: string;
+  title: string;
+  titleId: string;
+  moduleCode: string;
+  description: string;
+  descriptionId: string;
+  category: 'analog' | 'digital';
+  status: 'coming-soon';
+  tags: string[];
+}
 
 // ============================================================
-// All practicums (Phase 2: AM + Demodulation available)
+// Static Practicum List (No external dependencies)
 // ============================================================
-const practicums: PracticumConfig[] = [
-  amModulationConfig,
-  demodulationConfig,
-  fmModulationConfig,
+const practicums: StaticPracticum[] = [
+  {
+    id: 'am-modulation',
+    title: 'AM Modulation',
+    titleId: 'Modulasi AM',
+    moduleCode: 'TE03002',
+    description: 'Investigate amplitude modulation index, waveforms, and envelope detection.',
+    descriptionId: 'Menyelidiki indeks modulasi amplitudo, bentuk gelombang, dan deteksi selubung.',
+    category: 'analog',
+    status: 'coming-soon',
+    tags: ['Catu Daya', 'Sumber Sinyal', 'Penguat', 'Rangkaian Penala'],
+  },
+  {
+    id: 'demodulation',
+    title: 'AM Demodulation',
+    titleId: 'Demodulasi AM',
+    moduleCode: 'TE03003',
+    description: 'Recover intelligence from amplitude modulated carrier using envelope detector circuit.',
+    descriptionId: 'Mengembalikan sinyal informasi dari pembawa termodulasi amplitudo menggunakan detektor selubung.',
+    category: 'analog',
+    status: 'coming-soon',
+    tags: ['Catu Daya', 'Sumber Sinyal', 'Penguat', 'Detektor'],
+  },
+  {
+    id: 'fm-modulation',
+    title: 'FM Modulation',
+    titleId: 'Modulasi FM',
+    moduleCode: 'TE03004',
+    description: 'Analyze frequency modulation principles, frequency deviation, and modulation index.',
+    descriptionId: 'Menganalisis prinsip modulasi frekuensi, deviasi frekuensi, dan indeks modulasi.',
+    category: 'analog',
+    status: 'coming-soon',
+    tags: ['Catu Daya', 'Sumber Sinyal', 'Modulator FM'],
+  },
   {
     id: 'digital-signals',
     title: 'Digital Signals',
@@ -22,11 +59,7 @@ const practicums: PracticumConfig[] = [
     descriptionId: 'Memperagakan pengiriman sinyal digital termasuk NRZ, telepon, dan sinyal analog.',
     category: 'digital',
     status: 'coming-soon',
-    requiredModules: [],
-    requiredInstruments: [],
-    requiredConnections: [],
-    procedure: [],
-    observationTargets: [],
+    tags: [],
   },
   {
     id: 'sample-and-hold',
@@ -37,11 +70,7 @@ const practicums: PracticumConfig[] = [
     descriptionId: 'Mendemonstrasikan proses sampling dan menjelaskan pengaruh frekuensi sampling serta lebar pulsa.',
     category: 'digital',
     status: 'coming-soon',
-    requiredModules: [],
-    requiredInstruments: [],
-    requiredConnections: [],
-    procedure: [],
-    observationTargets: [],
+    tags: [],
   },
   {
     id: 'aliasing-multiplex',
@@ -52,11 +81,7 @@ const practicums: PracticumConfig[] = [
     descriptionId: 'Mengidentifikasi masalah aliasing dan mendemonstrasikan pengiriman dua sinyal dengan metode pencuplikan.',
     category: 'digital',
     status: 'coming-soon',
-    requiredModules: [],
-    requiredInstruments: [],
-    requiredConnections: [],
-    procedure: [],
-    observationTargets: [],
+    tags: [],
   },
 ];
 
@@ -76,18 +101,16 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
     let lastFrameTime = 0;
     let isVisible = true;
 
-    // Throttle to ~30fps — waveform background doesn't need 60fps
+    // Throttle to ~30fps
     const FRAME_INTERVAL = 1000 / 30;
 
     const render = (timestamp: number) => {
-      // Skip frames to hit ~30fps target
       if (timestamp - lastFrameTime < FRAME_INTERVAL) {
         animId = requestAnimationFrame(render);
         return;
       }
       lastFrameTime = timestamp;
 
-      // Cap DPR at 2 for HiDPI — avoids 3x/4x over-rendering
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -120,7 +143,7 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
         ctx.stroke();
       }
 
-      // Grid dots — increased spacing for fewer draw calls
+      // Grid dots
       const gridSize = 80;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
       for (let x = 0; x < w; x += gridSize) {
@@ -135,7 +158,6 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
       animId = requestAnimationFrame(render);
     };
 
-    // Page Visibility API — pause animation when tab is hidden
     const handleVisibility = () => {
       isVisible = !document.hidden;
       if (isVisible) {
@@ -161,18 +183,8 @@ function useWaveformBackground(canvasRef: React.RefObject<HTMLCanvasElement | nu
 // ============================================================
 export default function Landing() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const navigate = useNavigate();
 
   useWaveformBackground(canvasRef);
-
-  const handleCardClick = useCallback(
-    (practicum: PracticumConfig) => {
-      if (practicum.status === 'available') {
-        navigate(`/lab/${practicum.id}`);
-      }
-    },
-    [navigate]
-  );
 
   return (
     <div className="landing-page">
@@ -205,10 +217,9 @@ export default function Landing() {
             {practicums.map((p) => (
               <div
                 key={p.id}
-                className={`practicum-card ${p.status === 'coming-soon' ? 'coming-soon' : ''}`}
-                onClick={() => handleCardClick(p)}
+                className="practicum-card coming-soon"
                 role="button"
-                tabIndex={p.status === 'available' ? 0 : -1}
+                tabIndex={-1}
                 aria-label={`${p.titleId} (${p.moduleCode})`}
               >
                 <div className="practicum-card-header">
@@ -216,8 +227,8 @@ export default function Landing() {
                     {p.category}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className={`practicum-card-status ${p.status}`}>
-                      {p.status === 'available' ? '● Ready' : '○ Coming Soon'}
+                    <span className="practicum-card-status coming-soon">
+                      ○ Coming Soon
                     </span>
                     <span className="practicum-card-code">{p.moduleCode}</span>
                   </div>
@@ -225,11 +236,11 @@ export default function Landing() {
                 <h2 className="practicum-card-title">{p.titleId}</h2>
                 <p className="practicum-card-desc">{p.descriptionId}</p>
                 <div className="practicum-card-meta">
-                  {p.requiredModules.slice(0, 3).map(m => (
-                    <span key={m.nodeId} className="practicum-card-tag">{m.label}</span>
+                  {p.tags.slice(0, 3).map((tag, tIdx) => (
+                    <span key={tIdx} className="practicum-card-tag">{tag}</span>
                   ))}
-                  {p.requiredModules.length > 3 && (
-                    <span className="practicum-card-tag">+{p.requiredModules.length - 3}</span>
+                  {p.tags.length > 3 && (
+                    <span className="practicum-card-tag">+{p.tags.length - 3}</span>
                   )}
                 </div>
               </div>

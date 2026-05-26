@@ -1,19 +1,12 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { SignalGraphProvider } from './engine/SignalGraphContext';
-import { ToastProvider } from './components/Toast';
 
 // ── Lazy-loaded pages (code splitting) ────────────────────────
 const Landing = lazy(() => import('./pages/Landing'));
-const LabWorkbench = lazy(() => import('./pages/LabWorkbench'));
 
 // Styles
 import './index.css';
-import './components/components.css';
-import './modules/modules.css';
-import './instruments/instruments.css';
 import './pages/pages.css';
-import './pages/canvas.css'; // ← Infinite canvas styles
 
 // ── Minimal loading fallback ──────────────────────────────────
 function LoadingFallback() {
@@ -51,16 +44,11 @@ function LoadingFallback() {
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <SignalGraphProvider>
-        <ToastProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/lab/:practicumId" element={<LabWorkbench />} />
-            </Routes>
-          </Suspense>
-        </ToastProvider>
-      </SignalGraphProvider>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
