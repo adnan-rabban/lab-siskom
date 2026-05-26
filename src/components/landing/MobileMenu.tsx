@@ -1,4 +1,5 @@
 import { Clock, ArrowUpRight } from 'lucide-react';
+import ThemeToggler from './ThemeToggler';
 
 interface MobileMenuProps {
   mobileMenuOpen: boolean;
@@ -16,6 +17,7 @@ export default function MobileMenu({ mobileMenuOpen, setMobileMenuOpen, time }: 
             <Clock size={14} />
             <span>{time || '12:00'} WIB</span>
           </span>
+          <ThemeToggler />
         </div>
 
         <div className="mobile-menu-links">

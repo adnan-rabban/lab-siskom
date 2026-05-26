@@ -961,3 +961,273 @@ img {
     border-bottom: none;
   }
 }
+
+/* --- Dark Mode Styles --- */
+html[data-theme='dark'] {
+  --color-bg: #0A0A0A;
+  --color-white: #121212;
+  --color-black: #ffffff;
+  --color-text: #F3F4F6;
+  --color-text-secondary: #A1A1AA;
+  --color-text-muted: #52525B;
+  --color-accent: #F26522;
+  --color-border: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .landing-page {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+html[data-theme='dark'] .landing-title {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .landing-subtitle {
+  color: var(--color-text-secondary);
+}
+
+html[data-theme='dark'] .landing-badge {
+  background-color: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #F26522;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+
+html[data-theme='dark'] .navbar {
+  background-color: #161616;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='dark'] .logo-svg {
+  fill: #ffffff;
+}
+
+html[data-theme='dark'] .nav-link {
+  color: #F3F4F6;
+}
+html[data-theme='dark'] .nav-link:hover {
+  color: #A1A1AA;
+}
+
+html[data-theme='dark'] .nav-clock,
+html[data-theme='dark'] .nav-availability {
+  color: #A1A1AA;
+}
+
+html[data-theme='dark'] .cta-button {
+  background-color: #ffffff;
+  color: #111827;
+}
+html[data-theme='dark'] .cta-button:hover {
+  background-color: #E5E7EB;
+}
+
+html[data-theme='dark'] .arrow-circle {
+  background-color: #111827;
+}
+html[data-theme='dark'] .arrow-circle svg {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .mobile-menu-btn {
+  background-color: #ffffff;
+  color: #111827;
+}
+
+html[data-theme='dark'] .cell-border-b {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+html[data-theme='dark'] .cell-border-x {
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+html[data-theme='dark'] .practicum-card {
+  background: #121212;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+html[data-theme='dark'] .practicum-card:hover {
+  background-color: #1A1A1A;
+}
+
+html[data-theme='dark'] .practicum-card-title {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .practicum-card-desc {
+  color: #A1A1AA;
+}
+
+html[data-theme='dark'] .practicum-card-tag {
+  background-color: #27272A;
+  color: #E4E4E7;
+  border: 1px solid #3F3F46;
+}
+html[data-theme='dark'] .practicum-card:hover .practicum-card-tag {
+  background-color: #3F3F46;
+}
+
+html[data-theme='dark'] .shader-swirl {
+  background:
+    radial-gradient(circle at 10% 20%, #0d0d0d 0%, #161616 80%),
+    radial-gradient(circle at 90% 80%, #080808 0%, #121212 100%);
+  opacity: 0.98;
+}
+
+html[data-theme='dark'] .shader-chromaflow {
+  background: radial-gradient(
+    circle 320px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 95, 3, 0.22) 0%,
+    rgba(255, 95, 3, 0.06) 60%,
+    transparent 100%
+  );
+}
+
+html[data-theme='dark'] .shader-chromaflow::after {
+  background: radial-gradient(circle, rgba(255, 95, 3, 0.08) 0%, transparent 75%);
+}
+
+html[data-theme='dark'] .mobile-guard-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+@media (max-width: 767px) {
+  html[data-theme='dark'] .cell-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+
+  html[data-theme='dark'] .practicum-grid {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background-color: #121212;
+  }
+
+  html[data-theme='dark'] .practicum-card {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* ============================================================
+   Theme Toggler (Segmented Switch) Styling
+   ============================================================ */
+.theme-switch-track {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 9999px;
+  padding: 3px;
+  gap: 2px;
+  width: 102px;
+  height: 38px;
+  box-sizing: border-box;
+  user-select: none;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+
+html[data-theme='dark'] .theme-switch-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.theme-switch-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 30px;
+  height: 30px;
+  background-color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+}
+
+html[data-theme='dark'] .theme-switch-indicator {
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.theme-switch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 250ms ease, transform 150ms ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.theme-switch-btn:hover {
+  color: #111827;
+}
+
+.theme-switch-btn:active {
+  transform: scale(0.9);
+}
+
+html[data-theme='dark'] .theme-switch-btn {
+  color: #A1A1AA;
+}
+
+html[data-theme='dark'] .theme-switch-btn:hover {
+  color: #E4E4E7;
+}
+
+.theme-switch-btn.active {
+  color: #F26522; /* Axion brand orange active color */
+}
+
+html[data-theme='dark'] .theme-switch-btn.active {
+  color: #F26522; /* Axion brand orange active color */
+}
+
+.theme-switch-icon {
+  transition: transform 300ms ease;
+}
+
+.theme-switch-btn:hover .theme-switch-icon {
+  transform: scale(1.1);
+}
+
+.theme-switch-btn.active .theme-switch-icon {
+  transform: scale(1.05);
+}
+
+
+/* --- Mobile Menu Dark Theme overrides --- */
+html[data-theme='dark'] .mobile-menu-sheet {
+  background-color: #161616;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='dark'] .mobile-menu-link {
+  color: #F3F4F6;
+}
+
+html[data-theme='dark'] .mobile-menu-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .mobile-cta-btn {
+  background-color: #ffffff;
+  color: #111827;
+}
+
+

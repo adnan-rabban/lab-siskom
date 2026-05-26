@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import '../index.css';
 
 
@@ -26,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
         {/* DNS prefetch + preconnect for Google Fonts */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
@@ -40,6 +41,24 @@ export default function RootLayout({
         {/* Material Symbols */}
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
+
+        {/* Prevent theme flashing during SSR page loading */}
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme') || 'system';
+                  var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                  document.documentElement.classList.toggle('dark', isDark);
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
       </head>
       <body className="loaded">
         {/* Mobile Guard Screen */}

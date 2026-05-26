@@ -1,4 +1,5 @@
 import { Clock, Menu, X, ArrowUpRight } from 'lucide-react';
+import ThemeToggler from './ThemeToggler';
 
 interface NavbarProps {
   time: string;
@@ -20,6 +21,7 @@ export default function Navbar({ time, mobileMenuOpen, setMobileMenuOpen }: Navb
         {/* Right-side availability / Clock / CTA */}
         <div className="nav-right">
           <span className="nav-availability">E-Learning SisKom</span>
+          <ThemeToggler />
           <span className="nav-clock">
             <Clock size={14} />
             <span>{time || '12:00'} WIB</span>
