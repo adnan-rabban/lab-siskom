@@ -159,6 +159,55 @@ body.loaded {
   opacity: 1;
 }
 
+/* ── Mobile Guard: Sticky screen for mobile users ── */
+.mobile-guard {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #0C0C0C;
+  color: #F0EFE8;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+.mobile-guard-icon {
+  font-size: 48px;
+  margin-bottom: 24px;
+  opacity: 0.6;
+}
+.mobile-guard h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+.mobile-guard p {
+  font-size: 0.875rem;
+  color: rgba(240, 239, 232, 0.5);
+  line-height: 1.6;
+  max-width: 320px;
+}
+.mobile-guard-badge {
+  margin-top: 20px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #FF5C00;
+  background: rgba(255, 92, 0, 0.1);
+  border: 1px solid rgba(255, 92, 0, 0.2);
+  padding: 4px 12px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+/* Show mobile guard only on screens < 768px (portrait phones) */
+@media (max-width: 767px) {
+  .mobile-guard { display: flex; }
+  #root { display: none !important; }
+}
+
 /* Minimal scrollbar — Mono style */
 ::-webkit-scrollbar {
   width: 6px;
