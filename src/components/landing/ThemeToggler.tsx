@@ -7,19 +7,21 @@ type Theme = 'light' | 'dark' | 'system';
 
 export default function ThemeToggler() {
   const [theme, setTheme] = useState<Theme>('system');
+  const [mounted, setMounted] = useState(false);
 
   // Initialize theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
-      setTimeout(() => {
-        setTheme(savedTheme);
-      }, 0);
+      setTheme(savedTheme);
     }
+    setMounted(true);
   }, []);
 
   // Handle theme changes and system preferences listener
   useEffect(() => {
+    if (!mounted) return;
+
     const root = document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -48,7 +50,7 @@ export default function ThemeToggler() {
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
-  }, [theme]);
+  }, [theme, mounted]);
 
   const themeOptions = [
     { value: 'system', label: 'Sistem', icon: Monitor, transform: 'translateX(0px)' },

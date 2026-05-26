@@ -277,13 +277,13 @@ img {
 
 .landing-page {
   height: 100vh;
-  background-color: #EFEFEF;
+  background-color: var(--color-bg);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   font-family: var(--font-sans);
-  color: #111827;
+  color: var(--color-text);
 }
 
 /* --- WebGL Background Shader Simulation --- */
