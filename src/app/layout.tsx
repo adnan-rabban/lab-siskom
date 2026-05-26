@@ -44,17 +44,46 @@ export default function RootLayout({
       <body className="loaded">
         {/* Mobile Guard Screen */}
         <div className="mobile-guard" id="mobile-guard" role="alert">
-          <div className="mobile-guard-icon">🖥️</div>
-          <h2>Desktop atau Tablet Diperlukan</h2>
-          <p>
-            Virtual Laboratory Simulator membutuhkan layar yang lebih besar untuk pengalaman terbaik.
-            Silakan buka pada desktop atau tablet (landscape).
-          </p>
-          <p style={{ marginTop: '8px', fontSize: '0.75rem' }}>
-            Desktop or tablet required for the best experience.
-            Please open on a larger screen.
-          </p>
-          <div className="mobile-guard-badge">Min. 768px viewport width</div>
+          <div className="mobile-guard-glow" />
+          <div className="mobile-guard-grid-bg" />
+          
+          <div className="mobile-guard-card">
+            <div className="mobile-guard-header-line" />
+            <div className="mobile-guard-status">
+              <span className="status-dot"></span>
+              <span className="status-text font-mono">SYSTEM BLOCK // RESOLUTION LIMIT</span>
+            </div>
+            
+            <div className="mobile-guard-icon-container">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="mobile-guard-svg">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+                <path d="M6 10h3V7M18 10h-3v3" />
+              </svg>
+            </div>
+            
+            <h2>Layar Lebih Besar Diperlukan</h2>
+            
+            <p className="description-primary">
+              Virtual Laboratory Simulator memerlukan resolusi layar desktop atau tablet (landscape) untuk memuat panel kontrol instrumen teknik secara presisi.
+            </p>
+            
+            <div className="mobile-guard-specs font-mono">
+              <div className="spec-row">
+                <span className="spec-label">MIN_WIDTH:</span>
+                <span className="spec-val text-accent">768PX</span>
+              </div>
+              <div className="spec-row">
+                <span className="spec-label">CURRENT_STATE:</span>
+                <span className="spec-val">UNSUPPORTED_VIEWPORT</span>
+              </div>
+            </div>
+            
+            <div className="mobile-guard-footer font-mono">
+              PUDAK SCIENTIFIC SIMULATOR v1.0.0
+            </div>
+          </div>
         </div>
 
         <div id="root">{children}</div>
