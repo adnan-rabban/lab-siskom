@@ -287,12 +287,12 @@
 }
 
 .cell-border-b {
-  border-bottom: 1px solid #E4E4E7;
+  border-bottom: 1px solid #000000;
 }
 
 .cell-border-x {
-  border-left: 1px solid #E4E4E7;
-  border-right: 1px solid #E4E4E7;
+  border-left: 1px solid #000000;
+  border-right: 1px solid #000000;
 }
 
 .cell-header {
@@ -373,8 +373,8 @@
   position: relative;
   background: #ffffff;
   border: none;
-  border-right: 1px solid #E4E4E7;
-  border-bottom: 1px solid #E4E4E7;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
   padding: 20px 24px; /* Reduced padding for compact layout */
   display: flex;
   flex-direction: column;
@@ -650,7 +650,7 @@
     padding-bottom: 24px;
     border-left: none !important;
     border-right: none !important;
-    border-bottom: 1px solid #E4E4E7 !important;
+    border-bottom: 1px solid #000000 !important;
   }
 
   .cell-grid {
@@ -690,14 +690,14 @@
     margin-right: 0;
     left: 0;
     right: 0;
-    border: 1px solid #E4E4E7;
+    border: 1px solid #000000;
     border-radius: 8px;
     background-color: #ffffff;
   }
 
   .practicum-card {
     border-right: none;
-    border-bottom: 1px solid #E4E4E7;
+    border-bottom: 1px solid #000000;
     padding: 20px 24px;
     min-height: auto;
   }
