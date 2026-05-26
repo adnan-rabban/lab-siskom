@@ -102,9 +102,9 @@ function buildDefaultLayout(config: PracticumConfig): WidgetMeta[] {
   // ── Instruments ──────────────────────────────────────────
   // Oscilloscope occupies the left column; smaller instruments
   // stack in the right column so they never overlap each other.
-  const OSC_W      = 640;
+  const OSC_W      = 860;
   const SIDE_INST_W = 275;
-  const SIDE_INST_X = 40 + OSC_W + 20; // 700
+  const SIDE_INST_X = 40 + OSC_W + 20; // 920
 
   layout.push({
     id: 'instrument-oscilloscope',
