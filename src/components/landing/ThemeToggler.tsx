@@ -6,16 +6,20 @@ import { Sun, Moon, Monitor } from 'lucide-react';
 type Theme = 'light' | 'dark' | 'system';
 
 export default function ThemeToggler() {
-  const [theme, setTheme] = useState<Theme>('system');
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('theme') as Theme) || 'system';
+    }
+    return 'system';
+  });
   const [mounted, setMounted] = useState(false);
 
-  // Initialize theme from localStorage on mount
+  // Set mounted status on client-side mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    setMounted(true);
+    const handle = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
 
   // Handle theme changes and system preferences listener
@@ -58,7 +62,8 @@ export default function ThemeToggler() {
     { value: 'light', label: 'Terang', icon: Sun, transform: 'translateX(64px)' },
   ] as const;
 
-  const activeOption = themeOptions.find((opt) => opt.value === theme);
+  const currentTheme = mounted ? theme : 'system';
+  const activeOption = themeOptions.find((opt) => opt.value === currentTheme);
   const transformStyle = activeOption ? activeOption.transform : 'translateX(32px)';
 
   return (
@@ -70,7 +75,7 @@ export default function ThemeToggler() {
       />
 
       {themeOptions.map(({ value, label, icon: Icon }) => {
-        const isActive = theme === value;
+        const isActive = currentTheme === value;
         return (
           <button
             key={value}
