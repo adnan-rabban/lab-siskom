@@ -2,6 +2,7 @@
 
 import { useRef, useCallback } from 'react';
 import { useWorkbenchStore } from '../../store/workbenchStore';
+import { useWorkbench } from '../workbench/WorkbenchContext';
 
 interface BNCPortProps {
   portId: string;
@@ -26,6 +27,8 @@ export default function BNCPort({
   const canReceive = dragging && dragging.fromPortId !== portId && !disabled;
 
   // Mulai drag kabel
+  const { toCanvas } = useWorkbench();
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
     e.preventDefault();
@@ -34,10 +37,12 @@ export default function BNCPort({
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    startDragging(portId, x, y);
-  }, [portId, disabled, startDragging]);
+    // Konversi posisi center port dari screen → canvas coordinates
+    const screenX = rect.left + rect.width / 2;
+    const screenY = rect.top + rect.height / 2;
+    const canvasPos = toCanvas(screenX, screenY);
+    startDragging(portId, canvasPos.x, canvasPos.y);
+  }, [portId, disabled, startDragging, toCanvas]);
 
   // Terima kabel dari port lain
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
