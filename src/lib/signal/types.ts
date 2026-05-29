@@ -16,7 +16,7 @@ export type WaveformType =
 
 export type PortType = 'bnc_out' | 'bnc_in' | 'sync_out' | 'mod_out' | 'mod_in' | 'trigger';
 
-export type InstrumentId = 'afg' | 'afg2' | 'osc' | 'gfc' | 'pudak_am' | 'pudak_fm' | 'pudak_demod' | 'pudak_digital' | 'pudak_sh' | 'pudak_mux';
+export type InstrumentId = 'afg1' | 'afg2' | 'osc' | 'gfc' | 'pudak' | 'afg' | 'pudak_am' | 'pudak_fm' | 'pudak_demod' | 'pudak_digital' | 'pudak_sh' | 'pudak_mux';
 
 // Parameter sinyal mentah
 export interface SignalParams {

@@ -2,7 +2,7 @@
 
 import {
   useRef, useCallback, useEffect, useState,
-  useMemo, RefObject,
+  useMemo, RefObject, ReactNode,
 } from 'react';
 import { useWorkbenchStore } from '../../store/workbenchStore';
 import { WorkbenchContext } from './WorkbenchContext';
@@ -32,6 +32,7 @@ const DEFAULT_CONFIG: WorkbenchConfig = {
 
 interface WorkbenchCanvasProps {
   config?: Partial<WorkbenchConfig>;
+  pudakSlot?: ReactNode;
 }
 
 // Toolbar atas workbench
@@ -97,6 +98,7 @@ function WorkbenchToolbar({
 // Komponen utama
 export default function WorkbenchCanvas({
   config = DEFAULT_CONFIG,
+  pudakSlot,
 }: WorkbenchCanvasProps) {
   const cfg = { ...DEFAULT_CONFIG, ...config };
 
@@ -289,6 +291,14 @@ export default function WorkbenchCanvas({
             <div data-instrument="gfc">
               <InstrumentWrapper instrumentId="gfc" title="GFC-8010H" zIndex={10}>
                 <FrequencyCounter />
+              </InstrumentWrapper>
+            </div>
+          )}
+
+          {pudakSlot && (
+            <div data-instrument="pudak">
+              <InstrumentWrapper instrumentId="pudak" title="PUDAK Module" zIndex={10}>
+                {pudakSlot}
               </InstrumentWrapper>
             </div>
           )}
