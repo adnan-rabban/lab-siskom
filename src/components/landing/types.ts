@@ -6,6 +6,8 @@ export interface Practicum {
   description: string;
   descriptionId: string;
   category: 'analog' | 'digital' | 'telecom';
-  status: 'coming-soon';
+  status: 'active' | 'coming-soon';
   tags: string[];
+  route: string;
+  instruments?: string[];
 }

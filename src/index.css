@@ -1232,4 +1232,102 @@ html[data-theme='dark'] .mobile-cta-btn {
   color: #111827;
 }
 
+/* PHASE 5 — Active Practicum Card States */
 
+/* Active card — hover lift effect */
+.practicum-card.active {
+  cursor: pointer;
+  transition: background-color 300ms ease, transform 200ms ease,
+              box-shadow 200ms ease;
+}
+.practicum-card.active:hover {
+  background-color: #FAFAFA;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+.practicum-card.active:hover .practicum-card-title {
+  color: #F26522;
+}
+
+/* Arrow indicator */
+.practicum-card-arrow {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  font-size: 14px;
+  color: #E4E4E7;
+  transition: all 200ms ease;
+}
+.practicum-card.active:hover .practicum-card-arrow {
+  color: #F26522;
+  transform: translateX(3px);
+}
+
+/* Active status badge */
+.practicum-card-status.active {
+  color: #10B981;
+}
+
+/* Instruments list below description */
+.practicum-card-instruments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.practicum-card-instrument {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background-color: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+/* Dark mode overrides */
+html[data-theme='dark'] .practicum-card.active:hover {
+  background-color: #1a1a1a;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+html[data-theme='dark'] .practicum-card-status.active {
+  color: #34D399;
+}
+html[data-theme='dark'] .practicum-card-instrument {
+  background-color: #1e3a5f;
+  color: #93C5FD;
+  border-color: #1D4ED8;
+}
+html[data-theme='dark'] .practicum-card-arrow {
+  color: #374151;
+}
+html[data-theme='dark'] .practicum-card.active:hover .practicum-card-arrow {
+  color: #F26522;
+}
+
+/* Keyboard shortcut kbd element */
+kbd {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  padding: 1px 5px;
+  border: 1px solid #D1D5DB;
+  border-radius: 3px;
+  background-color: #F9FAFB;
+  color: #374151;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+}
+html[data-theme='dark'] kbd {
+  border-color: #334155;
+  background-color: #1E293B;
+  color: #94A3B8;
+}
+
+/* Workbench page body (prevent scrollbar on modul pages) */
+.workbench-page {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
